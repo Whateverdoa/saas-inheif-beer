@@ -4,6 +4,5 @@
   "installCommand": "npm install",
   "env": {
     "NEXT_PUBLIC_API_URL": "https://saas-inheif-beer.vercel.app"
-  },
-  "public": true
+  }
 }
