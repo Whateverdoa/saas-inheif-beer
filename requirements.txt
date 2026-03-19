@@ -6,7 +6,7 @@ pytest
 clerk-backend-api
 jinja2
 pydantic>=2.0.0
-pymupdf  # PDF validation
+pymupdf==1.24.14  # PDF validation (linux-compatible on Vercel)
 sqlalchemy[asyncio]>=2.0.0  # SQLite ORM with async support
 python-multipart  # File uploads
 aiosqlite  # Async SQLite driver
