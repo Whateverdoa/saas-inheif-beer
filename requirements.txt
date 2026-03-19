@@ -6,6 +6,7 @@ pytest
 clerk-backend-api
 jinja2
 pymupdf  # PDF validation
-sqlalchemy  # SQLite ORM
+sqlalchemy[asyncio]  # SQLite ORM with async support
 python-multipart  # File uploads
 aiosqlite  # Async SQLite driver
+greenlet  # Required for SQLAlchemy async
