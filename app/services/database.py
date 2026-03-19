@@ -31,7 +31,7 @@ class UserModel(Base):
     email = Column(String, nullable=False)
     name = Column(String, nullable=True)
     role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.B2C_CUSTOMER)
-    metadata = Column(SQLiteJSON, nullable=False, default={})
+    extra_data = Column("metadata", SQLiteJSON, nullable=False, default={})
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
@@ -74,7 +74,7 @@ class OrderModel(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
     submitted_at = Column(DateTime, nullable=True)
-    metadata = Column(SQLiteJSON, nullable=False, default={})
+    extra_data = Column("metadata", SQLiteJSON, nullable=False, default={})
 
 
 class SubscriptionModel(Base):
@@ -113,7 +113,7 @@ class TransactionModel(Base):
     amount = Column(Numeric(10, 2), nullable=False)
     currency = Column(String, nullable=False, default="EUR")
     status = Column(SQLEnum(TransactionStatus), nullable=False, default=TransactionStatus.PENDING)
-    metadata = Column(SQLiteJSON, nullable=False, default={})
+    extra_data = Column("metadata", SQLiteJSON, nullable=False, default={})
     created_at = Column(DateTime, nullable=False, default=datetime.now)
 
 
@@ -230,7 +230,7 @@ class SQLiteAdapter(DatabaseAdapter):
             email=model.email,
             name=model.name,
             role=model.role,
-            metadata=model.metadata or {},
+            metadata=model.extra_data or {},
             created_at=model.created_at,
             updated_at=model.updated_at,
         )
@@ -282,7 +282,7 @@ class SQLiteAdapter(DatabaseAdapter):
             created_at=model.created_at,
             updated_at=model.updated_at,
             submitted_at=model.submitted_at,
-            metadata=model.metadata or {},
+            metadata=model.extra_data or {},
         )
     
     async def create_user(self, user: User) -> User:
@@ -292,7 +292,7 @@ class SQLiteAdapter(DatabaseAdapter):
                 email=user.email,
                 name=user.name,
                 role=user.role,
-                metadata=user.metadata,
+                extra_data=user.metadata,
                 created_at=user.created_at,
                 updated_at=user.updated_at,
             )
@@ -382,7 +382,7 @@ class SQLiteAdapter(DatabaseAdapter):
                 created_at=order.created_at,
                 updated_at=order.updated_at,
                 submitted_at=order.submitted_at,
-                metadata=order.metadata,
+                extra_data=order.metadata,
             )
             session.add(db_order)
             await session.commit()
@@ -595,7 +595,7 @@ class SQLiteAdapter(DatabaseAdapter):
                 amount=Decimal(str(transaction.amount)),
                 currency=transaction.currency,
                 status=transaction.status,
-                metadata=transaction.metadata,
+                extra_data=transaction.metadata,
                 created_at=transaction.created_at,
             )
             session.add(db_txn)
@@ -611,7 +611,7 @@ class SQLiteAdapter(DatabaseAdapter):
                 amount=float(db_txn.amount),
                 currency=db_txn.currency,
                 status=db_txn.status,
-                metadata=db_txn.metadata or {},
+                metadata=db_txn.extra_data or {},
                 created_at=db_txn.created_at,
             )
     
@@ -705,11 +705,11 @@ def get_database() -> DatabaseAdapter:
         convex_token = os.getenv("CONVEX_TOKEN", "")
         
         if convex_url and convex_token:
-            logger.info("database.using_convex")
+            logger.info("Using Convex database adapter")
             _db_adapter = ConvexAdapter(convex_url, convex_token)
         else:
             database_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./local.db")
-            logger.info("database.using_sqlite", extra={"url": database_url})
+            logger.info(f"Using SQLite database adapter: {database_url}")
             _db_adapter = SQLiteAdapter(database_url)
     
     return _db_adapter
