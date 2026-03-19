@@ -14,7 +14,7 @@ compliance_service = get_compliance_service()
 
 @router.get("/terms")
 async def get_terms_of_service(
-    format: Optional[str] = Query(default="markdown", regex="^(markdown|html)$")
+    format: Optional[str] = Query(default="markdown", pattern="^(markdown|html)$")
 ):
     """Get Terms of Service document."""
     try:
@@ -32,7 +32,7 @@ async def get_terms_of_service(
 
 @router.get("/privacy")
 async def get_privacy_policy(
-    format: Optional[str] = Query(default="markdown", regex="^(markdown|html)$")
+    format: Optional[str] = Query(default="markdown", pattern="^(markdown|html)$")
 ):
     """Get Privacy Policy document."""
     try:
@@ -50,7 +50,7 @@ async def get_privacy_policy(
 
 @router.get("/dpa")
 async def get_dpa(
-    format: Optional[str] = Query(default="markdown", regex="^(markdown|html)$")
+    format: Optional[str] = Query(default="markdown", pattern="^(markdown|html)$")
 ):
     """Get Data Processing Agreement (DPA/AVG) document."""
     try:
@@ -68,7 +68,7 @@ async def get_dpa(
 
 @router.get("/cookies")
 async def get_cookie_policy(
-    format: Optional[str] = Query(default="markdown", regex="^(markdown|html)$")
+    format: Optional[str] = Query(default="markdown", pattern="^(markdown|html)$")
 ):
     """Get Cookie Policy document."""
     try:

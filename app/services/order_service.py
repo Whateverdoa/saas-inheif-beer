@@ -16,8 +16,16 @@ from app.services.credit_service import get_credit_service
 logger = logging.getLogger("uvicorn.error")
 
 # File storage configuration
-UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "./uploads"))
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+# Use /tmp on Vercel (serverless) as it's the only writable directory
+_default_upload_dir = "/tmp/uploads" if os.getenv("VERCEL") else "./uploads"
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", _default_upload_dir))
+
+def _ensure_upload_dir():
+    """Create upload directory if it doesn't exist (called lazily, not at import)."""
+    try:
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
 
 
 class OrderService:
@@ -101,6 +109,7 @@ class OrderService:
             raise ValueError(f"PDF validation failed: {', '.join(validation_result.errors)}")
         
         # Store PDF file
+        _ensure_upload_dir()
         pdf_filename = f"{reference}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         pdf_path = UPLOAD_DIR / pdf_filename
         pdf_path.write_bytes(pdf_data)
