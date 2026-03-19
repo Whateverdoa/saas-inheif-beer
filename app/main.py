@@ -1,5 +1,6 @@
+import os
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
@@ -7,6 +8,9 @@ from app.routers import webhooks, auth, admin, legal, invoices, compliance, orde
 from app.services.database import get_database
 
 logger = logging.getLogger("uvicorn.error")
+
+# Check if running on Vercel
+IS_VERCEL = bool(os.getenv("VERCEL"))
 
 
 @asynccontextmanager
@@ -25,50 +29,50 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down...")
 
 
-app = FastAPI(title="OGOS SaaS API", lifespan=lifespan)
+app = FastAPI(
+    title="OGOS SaaS API",
+    lifespan=lifespan,
+)
 
 # CORS – adjust to your frontend origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://your-frontend.example"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://saas-inheif-beer.vercel.app",
+        "https://*.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Public webhook endpoints (protected by signature verification)
-app.include_router(webhooks.router)
 
-# Authentication endpoints
-app.include_router(auth.router)
-
-# Protected admin endpoints (require Clerk authentication)
-app.include_router(admin.router)
-
-# Legal document endpoints (public)
-app.include_router(legal.router)
-
-# Invoice endpoints (protected)
-app.include_router(invoices.router)
-
-# Compliance tracking endpoints (protected)
-app.include_router(compliance.router)
-
-# Order management endpoints (protected)
-app.include_router(orders.router)
-
-# Organization management endpoints (protected)
-app.include_router(organizations.router)
-
-# OGOS configuration endpoints (public)
-app.include_router(ogos_config.router)
-
-# Credit management endpoints (protected)
-app.include_router(credits.router)
-
-# Beer label endpoints (public configuration, protected orders)
-app.include_router(beer.router)
-
+# Health check at root
 @app.get("/healthz")
 async def healthz():
     return {"ok": True}
+
+
+# On Vercel, routes come in as /api/beer/... so we mount at /api
+# Locally, routes come in as /beer/... so we mount at root
+api_prefix = "/api" if IS_VERCEL else ""
+
+# Create a sub-router for all API routes
+api_router = APIRouter(prefix=api_prefix)
+
+# Include all routers in the API router
+api_router.include_router(webhooks.router)
+api_router.include_router(auth.router)
+api_router.include_router(admin.router)
+api_router.include_router(legal.router)
+api_router.include_router(invoices.router)
+api_router.include_router(compliance.router)
+api_router.include_router(orders.router)
+api_router.include_router(organizations.router)
+api_router.include_router(ogos_config.router)
+api_router.include_router(credits.router)
+api_router.include_router(beer.router)
+
+# Mount the API router
+app.include_router(api_router)
