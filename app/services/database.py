@@ -709,7 +709,9 @@ def get_database() -> DatabaseAdapter:
             logger.info("Using Convex database adapter")
             _db_adapter = ConvexAdapter(convex_url, convex_token)
         else:
-            database_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./local.db")
+            # Use /tmp on Vercel (serverless) as it's the only writable directory
+            default_db = "/tmp/local.db" if os.getenv("VERCEL") else "./local.db"
+            database_url = os.getenv("DATABASE_URL", f"sqlite+aiosqlite:///{default_db}")
             logger.info(f"Using SQLite database adapter: {database_url}")
             _db_adapter = SQLiteAdapter(database_url)
     
