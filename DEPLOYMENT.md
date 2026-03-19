@@ -3,14 +3,53 @@
 ## Vercel Deployment
 
 This project consists of two deployable components:
-1. **Backend API** (FastAPI) - `/webhooks-skeleton/`
-2. **Frontend** (Next.js) - `/webhooks-skeleton/frontend/`
+1. **Backend API** (FastAPI) - root directory
+2. **Frontend** (Next.js) - `/frontend/`
 
 ### Prerequisites
 
-- [Vercel CLI](https://vercel.com/docs/cli) installed: `npm i -g vercel`
-- Vercel account linked: `vercel login`
+- Node.js 18+
+- Python 3.11+
+- Vercel account
 - Environment variables ready (see `.env.vercel.example`)
+
+---
+
+## Quick Deploy (Recommended)
+
+### Step 1: Install Dependencies
+```bash
+npm install
+```
+
+### Step 2: Login to Vercel
+```bash
+npx vercel login
+```
+This opens a browser for authentication.
+
+### Step 3: Deploy
+```bash
+# Preview deployment (both backend + frontend)
+npm run deploy
+
+# Production deployment
+npm run deploy:prod
+```
+
+### Available Deploy Commands
+| Command | Description |
+|---------|-------------|
+| `npm run deploy` | Deploy both (preview) |
+| `npm run deploy:prod` | Deploy both (production) |
+| `npm run deploy:backend` | Deploy backend only (preview) |
+| `npm run deploy:backend:prod` | Deploy backend only (production) |
+| `npm run deploy:frontend` | Deploy frontend only (preview) |
+| `npm run deploy:frontend:prod` | Deploy frontend only (production) |
+
+---
+
+## Manual Deploy
 
 ---
 

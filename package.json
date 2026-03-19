@@ -1,10 +1,19 @@
 {
-  "name": "webhooks-skeleton-tests",
+  "name": "saas-inheif-beer",
   "private": true,
   "devDependencies": {
-    "@playwright/test": "^1.48.2"
+    "@playwright/test": "^1.48.2",
+    "vercel": "^50.33.1"
   },
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "deploy": "python scripts/deploy_vercel.py",
+    "deploy:prod": "python scripts/deploy_vercel.py --prod",
+    "deploy:backend": "python scripts/deploy_vercel.py --backend-only",
+    "deploy:backend:prod": "python scripts/deploy_vercel.py --backend-only --prod",
+    "deploy:frontend": "python scripts/deploy_vercel.py --frontend-only",
+    "deploy:frontend:prod": "python scripts/deploy_vercel.py --frontend-only --prod",
+    "vercel": "npx vercel",
+    "vercel:login": "npx vercel login"
   }
 }
