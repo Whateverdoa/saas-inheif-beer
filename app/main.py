@@ -2,34 +2,16 @@ import os
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 
 from app.routers import webhooks, auth, admin, legal, invoices, compliance, orders, organizations, ogos_config, credits, beer
-from app.services.database import get_database
 
 logger = logging.getLogger("uvicorn.error")
 
+# On Vercel serverless, we skip the lifespan events as they don't work well
+# Database initialization happens lazily on first request
+IS_VERCEL = bool(os.getenv("VERCEL"))
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Startup and shutdown events."""
-    # Startup
-    logger.info("Initializing database...")
-    db = get_database()
-    if hasattr(db, "init_db"):
-        await db.init_db()
-    logger.info("Database initialized")
-    
-    yield
-    
-    # Shutdown
-    logger.info("Shutting down...")
-
-
-app = FastAPI(
-    title="OGOS SaaS API",
-    lifespan=lifespan,
-)
+app = FastAPI(title="OGOS SaaS API")
 
 # CORS – adjust to your frontend origins
 app.add_middleware(
