@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+httpx
+stripe
+pytest
+clerk-backend-api
+jinja2
+pymupdf  # PDF validation
+sqlalchemy  # SQLite ORM
+python-multipart  # File uploads
+aiosqlite  # Async SQLite driver

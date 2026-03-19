@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clerk Auth Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Clerk Authentication Test</h1>
+        
+        <div class="input-group">
+            <label for="publishableKey">Clerk Publishable Key:</label>
+            <input 
+                type="text" 
+                id="publishableKey" 
+                placeholder="pk_test_..." 
+                value=""
+            >
+            <small style="color: #666;">Get this from Clerk Dashboard → API Keys</small>
+        </div>
+
+        <div class="input-group">
+            <label for="backendUrl">Backend URL:</label>
+            <input 
+                type="text" 
+                id="backendUrl" 
+                placeholder="http://localhost:8000" 
+                value="http://localhost:8000"
+            >
+        </div>
+
+        <div id="status"></div>
+
+        <div>
+            <button id="initBtn" onclick="initClerk()">Initialize Clerk</button>
+            <button id="signInBtn" onclick="signIn()" disabled>Sign In</button>
+            <button id="testAuthBtn" onclick="testAuth()" disabled>Test /auth/me</button>
+            <button id="testAdminBtn" onclick="testAdmin()" disabled>Test /admin/events</button>
+        </div>
+
+        <div id="userInfo" style="margin-top: 20px;"></div>
+        <div id="apiResponse" style="margin-top: 20px;"></div>
+    </div>
+
+    <!-- Load Clerk SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+
+    <script>
+        let clerk = null;
+        let sessionToken = null;
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+
+        function updateButtons() {
+            const hasClerk = clerk !== null;
+            const isSignedIn = hasClerk && clerk.user !== null;
+            
+            document.getElementById('initBtn').disabled = hasClerk;
+            document.getElementById('signInBtn').disabled = !hasClerk || isSignedIn;
+            document.getElementById('testAuthBtn').disabled = !isSignedIn;
+            document.getElementById('testAdminBtn').disabled = !isSignedIn;
+        }
+
+        async function initClerk() {
+            const publishableKey = document.getElementById('publishableKey').value.trim();
+            
+            if (!publishableKey) {
+                showStatus('Please enter your Clerk Publishable Key', 'error');
+                return;
+            }
+
+            if (!publishableKey.startsWith('pk_')) {
+                showStatus('Invalid publishable key format. Should start with pk_test_ or pk_live_', 'error');
+                return;
+            }
+
+            try {
+                showStatus('Initializing Clerk...', 'info');
+                
+                clerk = new Clerk(publishableKey);
+                await clerk.load();
+                
+                showStatus('✅ Clerk initialized successfully!', 'success');
+                updateButtons();
+                
+                if (clerk.user) {
+                    await getUserInfo();
+                } else {
+                    showStatus('⚠️ Not signed in. Click "Sign In" to authenticate.', 'info');
+                }
+            } catch (error) {
+                showStatus(`❌ Error initializing Clerk: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function signIn() {
+            if (!clerk) {
+                showStatus('Please initialize Clerk first', 'error');
+                return;
+            }
+
+            try {
+                await clerk.redirectToSignIn();
+            } catch (error) {
+                showStatus(`❌ Error redirecting to sign in: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function getUserInfo() {
+            if (!clerk || !clerk.user) {
+                document.getElementById('userInfo').innerHTML = '';
+                return;
+            }
+
+            try {
+                sessionToken = await clerk.session.getToken();
+                
+                const userInfo = `
+                    <div class="status success">
+                        <h3>✅ Signed In</h3>
+                        <p><strong>User ID:</strong> ${clerk.user.id}</p>
+                        <p><strong>Email:</strong> ${clerk.user.primaryEmailAddress?.emailAddress || 'N/A'}</p>
+                        <p><strong>Name:</strong> ${clerk.user.fullName || 'N/A'}</p>
+                        <p><strong>Session Token:</strong> <code>${sessionToken.substring(0, 20)}...</code></p>
+                    </div>
+                `;
+                document.getElementById('userInfo').innerHTML = userInfo;
+                updateButtons();
+            } catch (error) {
+                showStatus(`❌ Error getting user info: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function testAuth() {
+            if (!sessionToken) {
+                showStatus('No session token available. Please sign in first.', 'error');
+                return;
+            }
+
+            const backendUrl = document.getElementById('backendUrl').value.trim();
+            
+            try {
+                showStatus('Testing /auth/me endpoint...', 'info');
+                
+                const response = await fetch(`${backendUrl}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showStatus('✅ /auth/me test successful!', 'success');
+                    document.getElementById('apiResponse').innerHTML = `
+                        <h3>API Response:</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    showStatus(`❌ Test failed: ${data.detail || 'Unknown error'}`, 'error');
+                    document.getElementById('apiResponse').innerHTML = `
+                        <h3>Error Response:</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                showStatus(`❌ Network error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function testAdmin() {
+            if (!sessionToken) {
+                showStatus('No session token available. Please sign in first.', 'error');
+                return;
+            }
+
+            const backendUrl = document.getElementById('backendUrl').value.trim();
+            
+            try {
+                showStatus('Testing /admin/events endpoint...', 'info');
+                
+                const response = await fetch(`${backendUrl}/admin/events`, {
+                    headers: {
+                        'Authorization': `Bearer ${sessionToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showStatus('✅ /admin/events test successful!', 'success');
+                    document.getElementById('apiResponse').innerHTML = `
+                        <h3>API Response:</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    showStatus(`❌ Test failed: ${data.detail || 'Unknown error'}`, 'error');
+                    document.getElementById('apiResponse').innerHTML = `
+                        <h3>Error Response:</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                showStatus(`❌ Network error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Check if user is already signed in on page load
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('clerk_session')) {
+                // User was redirected back after sign-in
+                showStatus('Redirected back from Clerk. Initialize Clerk to check authentication status.', 'info');
+            }
+        });
+    </script>
+</body>
+</html>
+
