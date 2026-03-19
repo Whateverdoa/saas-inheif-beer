@@ -1,6 +1,6 @@
 import os
 import logging
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
@@ -8,9 +8,6 @@ from app.routers import webhooks, auth, admin, legal, invoices, compliance, orde
 from app.services.database import get_database
 
 logger = logging.getLogger("uvicorn.error")
-
-# Check if running on Vercel
-IS_VERCEL = bool(os.getenv("VERCEL"))
 
 
 @asynccontextmanager
@@ -54,25 +51,15 @@ async def healthz():
     return {"ok": True}
 
 
-# On Vercel, routes come in as /api/beer/... so we mount at /api
-# Locally, routes come in as /beer/... so we mount at root
-api_prefix = "/api" if IS_VERCEL else ""
-
-# Create a sub-router for all API routes
-api_router = APIRouter(prefix=api_prefix)
-
-# Include all routers in the API router
-api_router.include_router(webhooks.router)
-api_router.include_router(auth.router)
-api_router.include_router(admin.router)
-api_router.include_router(legal.router)
-api_router.include_router(invoices.router)
-api_router.include_router(compliance.router)
-api_router.include_router(orders.router)
-api_router.include_router(organizations.router)
-api_router.include_router(ogos_config.router)
-api_router.include_router(credits.router)
-api_router.include_router(beer.router)
-
-# Mount the API router
-app.include_router(api_router)
+# Include all routers
+app.include_router(webhooks.router)
+app.include_router(auth.router)
+app.include_router(admin.router)
+app.include_router(legal.router)
+app.include_router(invoices.router)
+app.include_router(compliance.router)
+app.include_router(orders.router)
+app.include_router(organizations.router)
+app.include_router(ogos_config.router)
+app.include_router(credits.router)
+app.include_router(beer.router)
