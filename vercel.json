@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index.py",
+      "src": "api/test.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "50mb",
@@ -13,12 +13,11 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index.py"
+      "dest": "api/test.py"
     }
   ],
   "env": {
     "PYTHONUNBUFFERED": "1",
-    "VERCEL": "1",
-    "CLERK_SECRET_KEY": "sk_test_placeholder"
+    "VERCEL": "1"
   }
 }
