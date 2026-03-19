@@ -1,6 +1,7 @@
 """Database abstraction layer for SQLite (local) and Convex (production)."""
 import os
 import logging
+from decimal import Decimal
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from abc import ABC, abstractmethod
