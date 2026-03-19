@@ -1,12 +1,13 @@
-fastapi
+fastapi>=0.109.0
 uvicorn
 httpx
 stripe
 pytest
 clerk-backend-api
 jinja2
+pydantic>=2.0.0
 pymupdf  # PDF validation
-sqlalchemy[asyncio]  # SQLite ORM with async support
+sqlalchemy[asyncio]>=2.0.0  # SQLite ORM with async support
 python-multipart  # File uploads
 aiosqlite  # Async SQLite driver
-greenlet  # Required for SQLAlchemy async
+greenlet>=3.0.0  # Required for SQLAlchemy async
