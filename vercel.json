@@ -3,7 +3,7 @@
   "name": "ogos-saas-api",
   "builds": [
     {
-      "src": "app/main.py",
+      "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "50mb",
@@ -13,56 +13,8 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/healthz",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/webhooks/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/auth/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/admin/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/orders/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/organizations/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/invoices/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/compliance/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/credits/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/legal/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/ogos/(.*)",
-      "dest": "app/main.py"
-    },
-    {
-      "src": "/beer/(.*)",
-      "dest": "app/main.py"
+      "src": "/(.*)",
+      "dest": "api/index.py"
     }
   ],
   "env": {
