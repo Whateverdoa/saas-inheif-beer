@@ -1,9 +1,8 @@
 {
-  "version": 2,
-  "name": "ogos-saas-frontend",
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "devCommand": "npm run dev",
-  "outputDirectory": ".next"
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://saas-inheif-beer.vercel.app"
+  }
 }
