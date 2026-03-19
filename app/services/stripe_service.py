@@ -27,7 +27,7 @@ class StripeWebhookVerifier:
     def __init__(self, webhook_secret: str | None = None):
         self.webhook_secret = webhook_secret or STRIPE_WEBHOOK_SECRET
         if not self.webhook_secret:
-            logger.warning("stripe.no_webhook_secret", extra={"msg": "STRIPE_WEBHOOK_SECRET not set"})
+            logger.warning("STRIPE_WEBHOOK_SECRET not set - webhook verification will fail")
 
     def verify(self, raw_body: bytes, signature_header: str) -> Dict[str, Any]:
         # stripe library handles timestamp/signature, default tolerance ~300s

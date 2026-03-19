@@ -32,12 +32,9 @@ class EBoekhoudenClient:
         self.base_url = EBOEKHOUDEN_API_BASE_URL
 
         if not self.enabled:
-            logger.info("eboekhouden.disabled", extra={"msg": "e-boekhouden sync is disabled"})
+            logger.info("e-boekhouden sync is disabled")
         elif not self.api_key or not self.company_id:
-            logger.warning(
-                "eboekhouden.missing_config",
-                extra={"msg": "e-boekhouden API key or company ID not configured"},
-            )
+            logger.warning("e-boekhouden API key or company ID not configured")
 
     def _get_headers(self) -> Dict[str, str]:
         """Get HTTP headers for API requests."""

@@ -24,7 +24,7 @@ class ClerkAuthService:
     def __init__(self, secret_key: Optional[str] = None):
         self.secret_key = secret_key or CLERK_SECRET_KEY
         if not self.secret_key:
-            logger.warning("clerk.no_secret_key", extra={"msg": "CLERK_SECRET_KEY not set"})
+            logger.warning("CLERK_SECRET_KEY not set - authentication will not work")
         
         self.clerk = Clerk(bearer_auth=self.secret_key) if self.secret_key else None
 
@@ -82,7 +82,7 @@ class ClerkAuthService:
                 "image_url": image_url,
             }
         except Exception as e:
-            logger.warning("clerk.token_verification_failed", extra={"error": str(e)})
+            logger.warning(f"Clerk token verification failed: {str(e)}")
             raise ValueError(f"Token verification failed: {str(e)}")
 
     def get_user_id(self, token: str) -> str:

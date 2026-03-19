@@ -32,7 +32,7 @@ class PolarWebhookVerifier:
     def __init__(self, webhook_secret: str | None = None):
         self.webhook_secret = webhook_secret or POLAR_WEBHOOK_SECRET
         if not self.webhook_secret:
-            logger.warning("polar.no_webhook_secret", extra={"msg": "POLAR_WEBHOOK_SECRET not set"})
+            logger.warning("POLAR_WEBHOOK_SECRET not set - webhook verification will fail")
 
     def verify(self, raw_body: bytes, signature_header: str | None, timestamp: str | None):
         if not self.webhook_secret:
