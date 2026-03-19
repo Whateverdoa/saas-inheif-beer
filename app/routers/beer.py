@@ -2,7 +2,8 @@
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 
 from app.models.beer_label import (
     BeerLabelType,
@@ -13,6 +14,18 @@ from app.models.beer_label import (
     STANDARD_BEER_LABEL_TYPES,
     BEER_SUBSTRATES,
     detect_allergens,
+)
+from app.models.beer_i18n import (
+    EULanguage,
+    LanguageInfo,
+    LANGUAGE_NAMES,
+    LABEL_TRANSLATIONS,
+    ALLERGEN_TRANSLATIONS,
+    get_all_languages,
+    get_language_info,
+    translate_label,
+    translate_allergen,
+    get_compliance_text,
 )
 
 router = APIRouter(prefix="/beer", tags=["beer"])
@@ -162,3 +175,137 @@ async def list_categories() -> List[dict]:
             "description": "Full coverage shrink wrap label",
         },
     ]
+
+
+# ============================================================================
+# EU Language / i18n Endpoints
+# ============================================================================
+
+@router.get("/languages", response_model=List[LanguageInfo])
+async def list_languages() -> List[LanguageInfo]:
+    """
+    List all 24 official EU languages.
+    
+    Returns language code, native name, and English name for each.
+    """
+    return get_all_languages()
+
+
+@router.get("/languages/{lang_code}", response_model=LanguageInfo)
+async def get_language(lang_code: str) -> LanguageInfo:
+    """Get info for a specific EU language by code (e.g., 'nl', 'de', 'fr')."""
+    try:
+        lang = EULanguage(lang_code.lower())
+        return get_language_info(lang)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Language '{lang_code}' not found. Use ISO 639-1 codes.",
+        )
+
+
+@router.get("/translations/labels")
+async def get_label_translations(
+    keys: List[str] = Query(
+        default=["ingredients", "contains", "alcohol_by_volume"],
+        description="Label keys to translate",
+    ),
+    languages: List[str] = Query(
+        default=["en", "nl", "de", "fr"],
+        description="Language codes (ISO 639-1)",
+    ),
+) -> dict:
+    """
+    Get translations for compliance label text.
+    
+    Available keys:
+    - ingredients, contains, alcohol_by_volume, best_before
+    - nutritional_info, energy, produced_by, country_of_origin
+    - drink_responsibly, not_for_minors
+    """
+    lang_enums = []
+    for code in languages:
+        try:
+            lang_enums.append(EULanguage(code.lower()))
+        except ValueError:
+            pass
+    
+    if not lang_enums:
+        lang_enums = [EULanguage.EN]
+    
+    result = {}
+    for key in keys:
+        if key in LABEL_TRANSLATIONS:
+            result[key] = translate_label(key, lang_enums)
+    
+    return result
+
+
+@router.get("/translations/allergens")
+async def get_allergen_translations(
+    allergens: List[str] = Query(
+        default=["gluten", "barley", "wheat", "sulphites"],
+        description="Allergen names to translate",
+    ),
+    languages: List[str] = Query(
+        default=["en", "nl", "de", "fr"],
+        description="Language codes (ISO 639-1)",
+    ),
+) -> dict:
+    """
+    Get translations for allergen names.
+    
+    Common beer allergens: gluten, barley, wheat, sulphites
+    """
+    lang_enums = []
+    for code in languages:
+        try:
+            lang_enums.append(EULanguage(code.lower()))
+        except ValueError:
+            pass
+    
+    if not lang_enums:
+        lang_enums = [EULanguage.EN]
+    
+    result = {}
+    for allergen in allergens:
+        result[allergen] = translate_allergen(allergen, lang_enums)
+    
+    return result
+
+
+class ComplianceTextRequest(BaseModel):
+    languages: List[str] = ["en", "nl"]
+    abv: float = 5.0
+    ingredients: List[str] = ["water", "barley malt", "hops", "yeast"]
+    allergens: List[str] = ["gluten", "barley"]
+    producer: str = "Brewery Name"
+    country: str = "Netherlands"
+
+
+@router.post("/compliance-text")
+async def generate_compliance_text(request: ComplianceTextRequest) -> dict:
+    """
+    Generate full EU-compliant label text in multiple languages.
+    
+    Returns all required label sections translated into each requested language.
+    Use this to generate the text content for back labels.
+    """
+    lang_enums = []
+    for code in request.languages:
+        try:
+            lang_enums.append(EULanguage(code.lower()))
+        except ValueError:
+            pass
+    
+    if not lang_enums:
+        lang_enums = [EULanguage.EN]
+    
+    return get_compliance_text(
+        languages=lang_enums,
+        abv=request.abv,
+        ingredients=request.ingredients,
+        allergens=request.allergens,
+        producer=request.producer,
+        country=request.country,
+    )

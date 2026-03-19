@@ -20,6 +20,18 @@ from app.models.beer_label import (
     BEER_SUBSTRATES,
     detect_allergens,
 )
+from app.models.beer_i18n import (
+    EULanguage,
+    LanguageInfo,
+    LANGUAGE_NAMES,
+    LABEL_TRANSLATIONS,
+    ALLERGEN_TRANSLATIONS,
+    get_all_languages,
+    get_language_info,
+    translate_label,
+    translate_allergen,
+    get_compliance_text,
+)
 
 __all__ = [
     "User",
@@ -55,5 +67,16 @@ __all__ = [
     "STANDARD_BEER_LABEL_TYPES",
     "BEER_SUBSTRATES",
     "detect_allergens",
+    # Beer i18n
+    "EULanguage",
+    "LanguageInfo",
+    "LANGUAGE_NAMES",
+    "LABEL_TRANSLATIONS",
+    "ALLERGEN_TRANSLATIONS",
+    "get_all_languages",
+    "get_language_info",
+    "translate_label",
+    "translate_allergen",
+    "get_compliance_text",
 ]
 

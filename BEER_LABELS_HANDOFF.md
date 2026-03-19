@@ -34,8 +34,17 @@ The existing platform is a **label printing SaaS** that:
 
 ## 2. Beer Labels Feature Roadmap
 
-### Phase 1: Foundation (MVP) ✅ Current Focus
+### Phase 1: Foundation (MVP) ✅ COMPLETED
 **Goal:** Accept beer label PDFs in standard industry formats
+
+**Completed:**
+- ✅ Beer label type definitions (bottle + Dutch can formats)
+- ✅ Beer-specific substrate recommendations
+- ✅ API endpoints for label types, substrates, categories
+- ✅ EU multi-language support (all 24 official languages)
+- ✅ Compliance text generator with translations
+- ✅ Simple ordering UI (label selector, substrate picker, quantity)
+- ✅ Compliance text generator page
 
 #### 2.1 Supported Beer Label Types
 
@@ -67,42 +76,43 @@ The existing platform is a **label printing SaaS** that:
 | Tintoretto Gesso | Textured, premium | Artisan/craft beers |
 
 #### 2.3 Initial Implementation
-- [ ] Add beer label type selection to order form
-- [ ] Pre-populate dimensions based on label type
-- [ ] Add beer-specific substrate recommendations
-- [ ] Create beer label category in product catalog
+- [x] Add beer label type selection to order form
+- [x] Pre-populate dimensions based on label type
+- [x] Add beer-specific substrate recommendations
+- [x] Create beer label category in product catalog
 
 ---
 
-### Phase 2: EU Compliance Labels 🔜 Want-to-Have
+### Phase 2: EU Compliance Labels ✅ PARTIALLY COMPLETE
 **Goal:** Automated generation of legally-required beer label content
 
+**Completed:**
+- ✅ Multi-language translation system (all 24 EU languages)
+- ✅ Compliance text generator API (`POST /beer/compliance-text`)
+- ✅ Allergen translation support (gluten, barley, wheat, sulphites)
+- ✅ Label text translations (ingredients, contains, ABV, warnings, etc.)
+- ✅ Frontend compliance text generator page (`/beer/compliance`)
+
 #### EU Regulation 1169/2011 Requirements
-| Element | Requirement | Implementation |
-|---------|-------------|----------------|
-| **Ingredients List** | Mandatory | Text input + auto-formatting |
-| **Allergens** | Bold/highlighted | Auto-detection from ingredients |
-| **ABV %** | Mandatory for >1.2% | Numeric input with validation |
-| **Net Volume** | Mandatory | Dropdown (330ml, 500ml, etc.) |
-| **Country of Origin** | Mandatory | Country selector |
-| **Producer Info** | Name + address | Form fields |
-| **Lot Number** | Traceability | Auto-generate or manual |
-| **Best Before** | Date format | Date picker |
-| **Nutritional Info** | Per 100ml | Calculator from ingredients |
-| **Recycling Symbols** | Country-specific | Symbol library |
+| Element | Requirement | Status |
+|---------|-------------|--------|
+| **Ingredients List** | Mandatory | ✅ Done |
+| **Allergens** | Bold/highlighted | ✅ Auto-detect + translate |
+| **ABV %** | Mandatory for >1.2% | ✅ Done |
+| **Net Volume** | Mandatory | 🔜 Dropdown needed |
+| **Country of Origin** | Mandatory | ✅ Done |
+| **Producer Info** | Name + address | ✅ Done |
+| **Lot Number** | Traceability | 🔜 Auto-generate |
+| **Best Before** | Date format | 🔜 Date picker |
+| **Nutritional Info** | Per 100ml | 🔜 Calculator |
+| **Recycling Symbols** | Country-specific | 🔜 Symbol library |
 
-#### Allergen Detection
-Common beer allergens to auto-detect:
-- Gluten (barley, wheat, rye, oats)
-- Sulphites (>10mg/L)
-- Fish isinglass (fining agent)
-- Milk/lactose (milk stouts)
-
-#### Implementation Approach
-1. Create compliance data model
-2. Build ingredient parser with allergen detection
-3. Generate compliance text blocks
-4. Overlay on PDF or generate separate compliance label
+#### Remaining Work
+- [ ] Nutritional info calculator from ingredients
+- [ ] Recycling symbol library (per country)
+- [ ] PDF overlay/generation for compliance labels
+- [ ] Lot number auto-generation
+- [ ] Best before date formatting per country
 
 ---
 
@@ -156,7 +166,55 @@ Common beer allergens to auto-detect:
 
 ---
 
-### Phase 5: Full Beer Label Designer 🔜 Want-to-Have
+### Phase 5: Full Frontend Integration 🔜 Want-to-Have
+**Goal:** Complete order flow with existing components (PDF upload, price calculation, checkout)
+
+#### Current State (Simple UI)
+The current `/beer` page is a simplified ordering interface with:
+- Label type selector
+- Substrate picker
+- Quantity input
+- Compliance text generator link
+
+#### Full Integration (Option A)
+Integrate with existing frontend components from `frontend/components/orders/`:
+- `OrderForm.tsx` - Full order form with validation
+- `PDFUpload.tsx` - Drag-and-drop PDF upload with preview
+- Price calculation via backend API
+- Checkout flow with Stripe/Polar
+
+#### Implementation Steps
+1. Create API clients in `frontend/lib/api/`:
+   - `pdf.ts` - PDF validation API
+   - `price.ts` - Price calculation API
+   - `orders.ts` - Order submission API
+2. Create types in `frontend/lib/types/orders.ts`
+3. Integrate beer label types into `OrderForm`
+4. Add beer-specific validation rules to PDF upload
+5. Connect to payment flow
+
+#### Files to Create/Modify
+```
+frontend/
+├── lib/
+│   ├── api/
+│   │   ├── pdf.ts          # PDF validation client
+│   │   ├── price.ts        # Price calculation client
+│   │   └── orders.ts       # Order submission client
+│   └── types/
+│       └── orders.ts       # Order types
+├── app/
+│   └── beer/
+│       └── order/
+│           └── page.tsx    # Full order page
+└── components/
+    └── beer/
+        └── BeerOrderForm.tsx  # Beer-specific order form
+```
+
+---
+
+### Phase 6: Full Beer Label Designer 🔜 Want-to-Have
 **Goal:** Visual editor where users can design beer labels from scratch
 
 #### Core Features
@@ -331,19 +389,25 @@ TEMPLATE_STORAGE_KEY=
 
 ## 9. Next Steps
 
-### Immediate (This Sprint)
+### Immediate (This Sprint) ✅ COMPLETED
 - [x] Create handoff document
-- [ ] Prepare Vercel deployment configuration
-- [ ] Add beer label type definitions to codebase
-- [ ] Update order form with beer label options
+- [x] Prepare Vercel deployment configuration
+- [x] Add beer label type definitions to codebase
+- [x] Update order form with beer label options
+- [x] Implement EU multi-language support (24 languages)
+- [x] Create compliance text generator
+- [x] Deploy to Vercel
 
 ### Short-term (Next 2 Sprints)
-- [ ] Implement beer label type API endpoints
-- [ ] Add beer-specific validation rules
-- [ ] Create substrate recommendations UI
+- [ ] Full frontend integration (Phase 5 - Option A)
+- [ ] PDF upload with beer-specific validation
+- [ ] Price calculation integration
+- [ ] Checkout flow connection
 
 ### Medium-term (Next Quarter)
-- [ ] EU compliance data model and API
+- [ ] Nutritional info calculator
+- [ ] Recycling symbol library
+- [ ] PDF compliance label overlay/generation
 - [ ] Basic template system
 - [ ] Enhanced PDF validation for beer labels
 
