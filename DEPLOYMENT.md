@@ -7,6 +7,18 @@ This GitHub repo connects to **two separate Vercel projects** (same team, e.g. `
 | **`saas-inheif-beer`** | Backend — FastAPI on Python serverless | **Repository root** (`.`) | `https://saas-inheif-beer.vercel.app` |
 | **`frontend`** | Frontend — Next.js app | **`frontend/`** subdirectory | `https://frontend-inheif.vercel.app` |
 
+### Critical: frontend Root Directory
+
+If the **`frontend`** Vercel project has Root Directory left as **repository root** (`.`), the build fails with:
+
+`No Next.js version detected … check your Root Directory setting matches the directory of your package.json`
+
+**Fix (one-time):** Vercel → project **`frontend`** → **Settings → General** → **Root Directory** → enter **`frontend`** → Save. Then **Deployments** → **⋯** on the latest `main` commit → **Redeploy** (or push an empty commit to `main`).
+
+Until this is set, **Production keeps serving the last successful deploy** (older UI). Merging PRs will not update the live site.
+
+**Also:** UI changes appear on **`frontend-inheif.vercel.app`**, not on `saas-inheif-beer.vercel.app` (that URL is the API).
+
 Each project has its **own** Vercel dashboard, env vars, and deployments. Pushes to `main` can trigger **both** if both are linked to the same repo with the correct root directories.
 
 ## Automatic deploys (push / PR)
