@@ -18,7 +18,7 @@ export function BrewTagShell({
   languageNavLabel: string
 }) {
   return (
-    <div className="font-brew-sans min-h-screen text-[#4a2800] relative overflow-x-hidden">
+    <div className="font-brew-sans min-h-screen text-[#4a2800] relative">
       <div className="fixed top-4 right-4 z-[100] flex justify-end">
         <LocaleSwitcher current={locale} navLabel={languageNavLabel} />
       </div>
@@ -61,9 +61,9 @@ export function BrewTagShell({
       />
       <BeerBubbles />
       <BeerFoamCollar />
-      {/* Ruimte onder schuimkraag zodat titel/taalwisselaar niet overlappen met schuim */}
+      {/* overflow-x alleen op content: voorkomt dat fixed bubbles worden weggeknipt */}
       <div
-        className="relative z-10"
+        className="relative z-10 overflow-x-hidden"
         style={{
           paddingTop: `max(5rem, ${Math.round(BEER_FOAM_COLLAR_HEIGHT_PX * 0.72)}px)`,
         }}

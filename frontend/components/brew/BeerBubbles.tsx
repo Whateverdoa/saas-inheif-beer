@@ -8,7 +8,7 @@ const REPEL_RADIUS = 120
 const REPEL_FORCE = 3.5
 
 const BUBBLE_BG =
-  "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.5) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.08) 70%, transparent 100%)"
+  "radial-gradient(circle at 35% 30%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.65) 28%, rgba(255,255,255,0.28) 52%, rgba(255,255,255,0.12) 72%, transparent 100%)"
 
 type BubbleState = {
   size: number
@@ -79,6 +79,7 @@ function tickBubble(
   h: number,
   mouseX: number,
   mouseY: number,
+  speedMul: number,
 ): void {
   s.age += 1
   if (s.fadeIn && s.age < 30) {
@@ -88,7 +89,7 @@ function tickBubble(
     s.fadeIn = false
   }
 
-  s.y -= s.speed
+  s.y -= s.speed * speedMul
   const wobble = Math.sin(s.age * s.wobbleSpeed + s.wobbleOffset) * s.wobbleAmp
   const targetX = s.baseX + wobble
   const dx = s.x - mouseX
@@ -125,12 +126,15 @@ function tickBubble(
  */
 export function BeerBubbles() {
   const [active, setActive] = useState(false)
+  const speedMulRef = useRef(1)
   const bubblesRef = useRef<(HTMLDivElement | null)[]>([])
   const statesRef = useRef<BubbleState[]>([])
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      /** Bij “minder beweging” toch bellen tonen, maar langzamer (anders: geen bellen). */
+      speedMulRef.current = reduce ? 0.22 : 1
       setActive(true)
     })
     return () => cancelAnimationFrame(id)
@@ -202,7 +206,7 @@ export function BeerBubbles() {
       for (let i = 0; i < BUBBLE_COUNT; i += 1) {
         const el = bubblesRef.current[i]
         const s = statesRef.current[i]
-        if (el && s) tickBubble(s, el, ww, hh, mouse.x, mouse.y)
+        if (el && s) tickBubble(s, el, ww, hh, mouse.x, mouse.y, speedMulRef.current)
       }
       id = requestAnimationFrame(loop)
     }
@@ -220,7 +224,10 @@ export function BeerBubbles() {
   if (!active) return null
 
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 z-[1] overflow-hidden"
+    >
       {Array.from({ length: BUBBLE_COUNT }, (_, i) => (
         <div
           key={i}
