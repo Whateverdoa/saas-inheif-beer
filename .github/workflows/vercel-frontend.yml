@@ -1,5 +1,4 @@
-# Every PR from this repo + every push to main → deploy project "frontend" (Next.js).
-# Fork PRs: skipped (GitHub does not expose repo secrets there).
+# Vercel KB pattern: link → pull → build → deploy --prebuilt (avoids rootDirectory / path doubling).
 # Secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID_FRONTEND
 
 name: Deploy frontend
@@ -14,6 +13,10 @@ concurrency:
   group: deploy-frontend-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
+
 jobs:
   deploy:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -21,16 +24,58 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to Vercel
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Link Vercel project
         working-directory: frontend
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
+        run: >-
+          npx vercel@latest link --yes
+          --token="$VERCEL_TOKEN"
+          --team="$VERCEL_ORG_ID"
+          --project="$VERCEL_PROJECT_ID"
+
+      - name: Pull Vercel environment
+        working-directory: frontend
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          ENV=preview
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            ENV=production
+          fi
+          npx vercel@latest pull --yes --environment="$ENV" --token="$VERCEL_TOKEN"
+
+      - name: Build
+        working-directory: frontend
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            npx --yes vercel@latest deploy . --token="$VERCEL_TOKEN" --yes --prod
+            npx vercel@latest build --prod --token="$VERCEL_TOKEN"
           else
-            npx --yes vercel@latest deploy . --token="$VERCEL_TOKEN" --yes
+            npx vercel@latest build --token="$VERCEL_TOKEN"
+          fi
+
+      - name: Deploy prebuilt
+        working-directory: frontend
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            npx vercel@latest deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"
+          else
+            npx vercel@latest deploy --prebuilt --yes --token="$VERCEL_TOKEN"
           fi
