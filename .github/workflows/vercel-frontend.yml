@@ -41,7 +41,7 @@ jobs:
         run: >-
           npx vercel@latest link --yes
           --token="$VERCEL_TOKEN"
-          --team="$VERCEL_ORG_ID"
+          --scope="$VERCEL_ORG_ID"
           --project="$VERCEL_PROJECT_ID"
 
       - name: Pull Vercel environment
@@ -55,6 +55,21 @@ jobs:
             ENV=production
           fi
           npx vercel@latest pull --yes --environment="$ENV" --token="$VERCEL_TOKEN"
+
+      # Pull writes rootDirectory: frontend (for Git clones). CI cwd is already frontend/ — drop it
+      # or vercel build uses .../frontend/frontend (missing) → spawn ENOENT.
+      - name: Normalize monorepo root for CI build
+        working-directory: frontend
+        run: |
+          node <<'NODE'
+          const fs = require("fs");
+          const p = ".vercel/project.json";
+          if (!fs.existsSync(p)) process.exit(0);
+          const j = JSON.parse(fs.readFileSync(p, "utf8"));
+          j.settings = j.settings || {};
+          delete j.settings.rootDirectory;
+          fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n");
+          NODE
 
       - name: Build
         working-directory: frontend
