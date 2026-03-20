@@ -10,7 +10,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Python build (repo root only — do not use bare "lib/" or it ignores frontend/lib/)
+/lib/
 lib64/
 parts/
 sdist/

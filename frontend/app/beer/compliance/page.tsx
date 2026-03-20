@@ -83,17 +83,17 @@ export default function CompliancePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
-        <div className="text-lg">Loading languages...</div>
+      <div className="min-h-screen bg-amber-50/30 dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-lg text-zinc-600 dark:text-zinc-400">Loading languages...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
+    <div className="min-h-screen bg-amber-50/30 dark:bg-zinc-950">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <header className="mb-8">
-          <Link href="/beer" className="text-amber-600 hover:text-amber-700 text-sm mb-2 inline-block">
+        <header className="mb-8 pb-6 border-b border-amber-100 dark:border-amber-900/30">
+          <Link href="/beer" className="text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 text-sm font-medium mb-3 inline-block">
             ← Back to Beer Labels
           </Link>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-2">

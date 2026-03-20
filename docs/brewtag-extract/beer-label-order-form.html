@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrewTag — Bestelformulier</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --beer-light: #f0c632;
+    --beer-mid: #d4a012;
+    --beer-deep: #b8860b;
+    --beer-dark: #8b6508;
+    --beer-glow: #e6b41a;
+    --foam-white: #fffef5;
+    --foam-cream: #fdf6d8;
+    --text-dark: #4a2800;
+    --text-mid: #6b3e06;
+    --glass-highlight: rgba(255,245,200,0.35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    background: linear-gradient(180deg,
+      #f2cc44 0%,
+      #e6b41a 15%,
+      #d4a012 35%,
+      #c08a0c 55%,
+      #a67206 75%,
+      #8b6508 100%
+    );
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  /* ── FOAM ── */
+  .foam-wrap {
+    position: absolute; top: 0; left: 0; width: 100%;
+    z-index: 5; pointer-events: none;
+  }
+  .foam-canvas { display: block; width: 100%; }
+
+  /* ── BEER GLOW ── */
+  .beer-glow {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 35%, rgba(242,204,68,0.25) 0%, rgba(230,180,26,0.12) 40%, transparent 70%),
+      radial-gradient(ellipse 40% 35% at 55% 30%, rgba(255,220,80,0.15) 0%, transparent 60%);
+  }
+
+  /* ── GLASS EDGES ── */
+  .glass-edge-left, .glass-edge-right {
+    position: fixed; top: 0; width: 80px; height: 100%; z-index: 50; pointer-events: none;
+  }
+  .glass-edge-left { left: 0; background: linear-gradient(90deg, var(--glass-highlight) 0%, transparent 100%); }
+  .glass-edge-right { right: 0; background: linear-gradient(-90deg, rgba(255,238,185,0.25) 0%, transparent 100%); }
+
+  .condensation {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;
+    background:
+      radial-gradient(2px 3px at 14% 25%, rgba(255,245,200,0.4), transparent),
+      radial-gradient(3px 4px at 33% 48%, rgba(255,240,190,0.3), transparent),
+      radial-gradient(2px 3px at 55% 20%, rgba(255,242,195,0.35), transparent),
+      radial-gradient(3px 3px at 75% 40%, rgba(255,238,185,0.25), transparent),
+      radial-gradient(2px 2px at 90% 58%, rgba(255,245,200,0.4), transparent),
+      radial-gradient(2px 3px at 20% 72%, rgba(255,240,190,0.3), transparent);
+  }
+
+  .bubbles-container {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1; pointer-events: none; overflow: hidden;
+  }
+  .bubble {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%,
+      rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.5) 25%,
+      rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.08) 70%, transparent 100%
+    );
+    border: 1px solid rgba(255,255,255,0.6);
+    box-shadow: inset 0 -1px 3px rgba(255,255,255,0.15), 0 0 4px rgba(255,255,255,0.2);
+    will-change: transform; pointer-events: none;
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    position: relative; z-index: 10;
+    max-width: 720px; margin: 0 auto; padding: 0 24px;
+  }
+
+  /* ── HEADER ── */
+  .form-header {
+    padding-top: 150px; padding-bottom: 40px; text-align: center;
+  }
+  .form-header h1 {
+    font-family: 'Playfair Display', serif; font-weight: 900;
+    font-size: clamp(2.4rem, 6vw, 3.6rem); line-height: 1;
+    color: var(--text-dark); text-shadow: 0 2px 20px rgba(242,204,68,0.3);
+    margin-bottom: 12px; animation: fadeUp 0.6s ease-out;
+  }
+  .form-header p {
+    font-size: 1.05rem; color: var(--text-mid); line-height: 1.6;
+    max-width: 480px; margin: 0 auto;
+    animation: fadeUp 0.6s ease-out 0.1s both;
+  }
+
+  /* ── FORM CARD ── */
+  .form-card {
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 24px;
+    padding: 44px 40px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.6s ease-out 0.2s both;
+  }
+
+  .form-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.35rem; font-weight: 700;
+    color: var(--text-dark); margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(74,40,0,0.1);
+  }
+
+  .form-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-row.single { grid-template-columns: 1fr; }
+  .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+  .form-group {
+    display: flex; flex-direction: column;
+  }
+
+  .form-group label {
+    font-size: 0.8rem; font-weight: 600; color: var(--text-mid);
+    margin-bottom: 6px; letter-spacing: 0.03em;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.45);
+    border: 1.5px solid rgba(74,40,0,0.1);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    color: var(--text-dark);
+    transition: all 0.25s ease;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: rgba(74,40,0,0.35);
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--beer-deep);
+    background: rgba(255,255,255,0.65);
+    box-shadow: 0 0 0 3px rgba(184,134,11,0.12);
+  }
+
+  .form-group select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b3e06' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  .form-group textarea {
+    resize: vertical; min-height: 90px;
+  }
+
+  /* ── CHECKBOX / RADIO GROUPS ── */
+  .option-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px; margin-bottom: 16px;
+  }
+
+  .option-card {
+    position: relative;
+  }
+  .option-card input { position: absolute; opacity: 0; pointer-events: none; }
+  .option-card .option-label {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px 12px; border-radius: 14px;
+    background: rgba(255,255,255,0.3);
+    border: 2px solid rgba(74,40,0,0.08);
+    cursor: pointer; transition: all 0.25s ease;
+    text-align: center;
+  }
+  .option-card .option-label:hover {
+    background: rgba(255,255,255,0.45);
+    border-color: rgba(74,40,0,0.15);
+  }
+  .option-card input:checked + .option-label {
+    background: rgba(184,134,11,0.15);
+    border-color: var(--beer-deep);
+    box-shadow: 0 0 0 2px rgba(184,134,11,0.1);
+  }
+  .option-icon { font-size: 1.6rem; margin-bottom: 6px; }
+  .option-name { font-size: 0.82rem; font-weight: 600; color: var(--text-dark); }
+  .option-desc { font-size: 0.7rem; color: var(--text-mid); margin-top: 2px; }
+
+  /* ── FILE UPLOAD ── */
+  .upload-zone {
+    border: 2px dashed rgba(74,40,0,0.15);
+    border-radius: 16px; padding: 32px 24px;
+    text-align: center; cursor: pointer;
+    background: rgba(255,255,255,0.2);
+    transition: all 0.25s ease;
+    margin-bottom: 16px;
+  }
+  .upload-zone:hover {
+    border-color: var(--beer-deep);
+    background: rgba(255,255,255,0.35);
+  }
+  .upload-zone .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+  .upload-zone .upload-text { font-size: 0.9rem; color: var(--text-mid); }
+  .upload-zone .upload-hint { font-size: 0.75rem; color: rgba(74,40,0,0.35); margin-top: 4px; }
+  .upload-zone input { display: none; }
+
+  /* ── QUANTITY SLIDER ── */
+  .qty-display {
+    text-align: center; margin-bottom: 8px;
+  }
+  .qty-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem; font-weight: 900; color: var(--text-dark);
+  }
+  .qty-label { font-size: 0.82rem; color: var(--text-mid); }
+
+  .qty-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 8px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.4), var(--beer-deep));
+    border-radius: 4px; outline: none;
+    margin-bottom: 8px;
+  }
+  .qty-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--foam-white);
+    border: 3px solid var(--beer-deep);
+    box-shadow: 0 2px 8px rgba(74,40,0,0.2);
+    cursor: pointer; transition: transform 0.15s ease;
+  }
+  .qty-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  .qty-slider::-moz-range-thumb {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--foam-white); border: 3px solid var(--beer-deep);
+    box-shadow: 0 2px 8px rgba(74,40,0,0.2); cursor: pointer;
+  }
+
+  .qty-ticks {
+    position: relative; height: 20px;
+    font-size: 0.7rem; color: var(--text-mid);
+    margin-bottom: 20px;
+  }
+  .qty-ticks span {
+    white-space: nowrap;
+  }
+
+  /* ── PRICE ESTIMATE ── */
+  .price-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(74,40,0,0.08);
+    border-radius: 14px; padding: 18px 24px;
+    margin-bottom: 20px;
+  }
+  .price-bar .price-label { font-size: 0.88rem; font-weight: 600; color: var(--text-mid); }
+  .price-bar .price-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; font-weight: 900; color: var(--text-dark);
+  }
+  .price-bar .price-per {
+    font-size: 0.78rem; color: var(--text-mid); font-weight: 400;
+  }
+
+  /* ── SPECIAL TREATMENTS ── */
+  .treatment-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+    margin-bottom: 16px;
+  }
+  .treatment-item {
+    position: relative;
+  }
+  .treatment-item input { position: absolute; opacity: 0; pointer-events: none; }
+  .treatment-label {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; border-radius: 12px;
+    background: rgba(255,255,255,0.3);
+    border: 2px solid rgba(74,40,0,0.08);
+    cursor: pointer; transition: all 0.25s ease;
+  }
+  .treatment-label:hover { background: rgba(255,255,255,0.45); }
+  .treatment-item input:checked + .treatment-label {
+    background: rgba(184,134,11,0.15);
+    border-color: var(--beer-deep);
+  }
+  .treatment-icon { font-size: 1.3rem; }
+  .treatment-text .treatment-name { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+  .treatment-text .treatment-price { font-size: 0.72rem; color: var(--text-mid); }
+
+  /* ── DIVIDER ── */
+  .form-divider {
+    height: 1px; background: rgba(74,40,0,0.08);
+    margin: 28px 0 24px;
+  }
+
+  /* ── SUBMIT BUTTON ── */
+  .submit-row {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 20px; margin-top: 28px;
+  }
+  .submit-note {
+    font-size: 0.78rem; color: var(--text-mid); line-height: 1.5;
+    max-width: 280px;
+  }
+  .btn-submit {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 16px 40px; background: var(--text-dark);
+    color: var(--beer-light); font-family: 'DM Sans', sans-serif;
+    font-size: 1rem; font-weight: 700; border: none; border-radius: 60px;
+    cursor: pointer; text-decoration: none; transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(74,40,0,0.25);
+    white-space: nowrap;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(74,40,0,0.35);
+  }
+
+  /* ── KVK LOOKUP ── */
+  .kvk-row {
+    display: flex; gap: 10px; margin-bottom: 12px;
+  }
+  .kvk-row input {
+    flex: 1; padding: 12px 16px;
+    background: rgba(255,255,255,0.45); border: 1.5px solid rgba(74,40,0,0.1);
+    border-radius: 12px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem; color: var(--text-dark); outline: none;
+    transition: all 0.25s ease; letter-spacing: 0.05em;
+  }
+  .kvk-row input::placeholder { color: rgba(74,40,0,0.35); }
+  .kvk-row input:focus {
+    border-color: var(--beer-deep); background: rgba(255,255,255,0.65);
+    box-shadow: 0 0 0 3px rgba(184,134,11,0.12);
+  }
+  .kvk-btn {
+    padding: 12px 22px; background: var(--text-dark); color: var(--beer-light);
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700;
+    border: none; border-radius: 12px; cursor: pointer; white-space: nowrap;
+    transition: all 0.25s ease; box-shadow: 0 2px 10px rgba(74,40,0,0.15);
+  }
+  .kvk-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(74,40,0,0.25); }
+  .kvk-btn:disabled { opacity: 0.6; cursor: wait; }
+  .kvk-btn.loading { animation: kvkPulse 1s ease-in-out infinite; }
+  @keyframes kvkPulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+  .kvk-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.78rem; margin-bottom: 16px; min-height: 22px;
+  }
+  .kvk-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    transition: background-color 0.3s;
+  }
+  .kvk-dot.idle { background: rgba(74,40,0,0.2); }
+  .kvk-dot.searching { background: #3b82f6; animation: kvkPulse 1s ease-in-out infinite; box-shadow: 0 0 6px rgba(59,130,246,0.5); }
+  .kvk-dot.found { background: #10b981; box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+  .kvk-dot.error { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.4); }
+  .kvk-status-text { color: var(--text-mid); }
+
+  .kvk-result-card {
+    background: rgba(16,185,129,0.06); border: 1.5px solid rgba(16,185,129,0.2);
+    border-radius: 14px; padding: 20px 22px; margin-bottom: 16px;
+    animation: fadeUp 0.3s ease-out;
+  }
+  .kvk-result-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+  }
+  .kvk-result-badge {
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: #10b981;
+  }
+  .kvk-result-clear {
+    font-size: 0.75rem; color: var(--text-mid); cursor: pointer;
+    background: none; border: none; font-family: 'DM Sans', sans-serif;
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .kvk-result-clear:hover { color: var(--text-dark); }
+  .kvk-result-name {
+    font-family: 'Playfair Display', serif; font-size: 1.2rem;
+    font-weight: 700; color: var(--text-dark); margin-bottom: 12px;
+  }
+  .kvk-result-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px;
+  }
+  .kvk-field-label {
+    font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-mid); margin-bottom: 1px;
+  }
+  .kvk-field-value {
+    font-size: 0.88rem; color: var(--text-dark); margin-bottom: 8px;
+  }
+  .kvk-field-value.empty {
+    color: rgba(74,40,0,0.3); font-style: italic;
+  }
+
+  .kvk-error-msg {
+    background: rgba(239,68,68,0.08); border: 1.5px solid rgba(239,68,68,0.2);
+    border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;
+    font-size: 0.85rem; color: #b91c1c; animation: fadeUp 0.2s ease-out;
+  }
+
+  .kvk-hint {
+    font-size: 0.72rem; color: rgba(74,40,0,0.35); margin-bottom: 16px;
+  }
+  .kvk-hint span {
+    color: var(--text-mid); cursor: pointer; text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .kvk-hint span:hover { color: var(--text-dark); }
+
+  /* ── BACK LINK ── */
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; color: var(--text-mid);
+    text-decoration: none; margin-bottom: 20px;
+    animation: fadeUp 0.5s ease-out;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--text-dark); }
+
+  footer {
+    position: relative; z-index: 10;
+    text-align: center; padding: 40px 24px;
+    font-size: 0.8rem; color: rgba(74,40,0,0.3);
+  }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 640px) {
+    .form-card { padding: 28px 20px; }
+    .form-row, .form-row.triple { grid-template-columns: 1fr; }
+    .option-grid { grid-template-columns: 1fr 1fr; }
+    .treatment-grid { grid-template-columns: 1fr; }
+    .submit-row { flex-direction: column-reverse; text-align: center; }
+    .submit-note { max-width: 100%; }
+    .btn-submit { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="foam-wrap"><canvas class="foam-canvas" id="foamCanvas"></canvas></div>
+<div class="glass-edge-left"></div>
+<div class="glass-edge-right"></div>
+<div class="condensation"></div>
+<div class="beer-glow"></div>
+<div class="bubbles-container" id="bubbles"></div>
+
+<div class="content">
+
+  <div class="form-header">
+    <a href="#" class="back-link">← Terug naar overzicht</a>
+    <h1>Bestel je Labels</h1>
+    <p>Vul het formulier in en ontvang binnen 24 uur een offerte op maat. Vrijblijvend, zonder verplichtingen.</p>
+  </div>
+
+  <!-- ── SECTION 1: CONTACT ── -->
+  <div class="form-card">
+    <div class="form-section-title">Jouw Gegevens</div>
+
+    <!-- KVK Lookup -->
+    <div class="form-group" style="margin-bottom: 4px;">
+      <label>KVK Nummer</label>
+    </div>
+    <div class="kvk-row">
+      <input type="text" id="kvkInput" placeholder="8-cijferig KVK nummer" maxlength="10" inputmode="numeric">
+      <button class="kvk-btn" id="kvkBtn" type="button">Opzoeken</button>
+    </div>
+    <div class="kvk-hint">
+      Probeer: <span onclick="document.getElementById('kvkInput').value='12345678'">12345678</span>
+      · <span onclick="document.getElementById('kvkInput').value='69599084'">69599084</span>
+      · of een willekeurig 8-cijferig nummer
+    </div>
+    <div class="kvk-status" id="kvkStatus">
+      <div class="kvk-dot idle" id="kvkDot"></div>
+      <span class="kvk-status-text" id="kvkStatusText">Voer een KVK nummer in</span>
+    </div>
+
+    <!-- KVK Result (hidden by default) -->
+    <div id="kvkResult" style="display:none;"></div>
+    <div id="kvkError" style="display:none;"></div>
+
+    <!-- Manual contact fields (shown when no KVK result, or always for personal info) -->
+    <div id="manualFields">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Contactpersoon</label>
+          <input type="text" id="contactName" placeholder="Voornaam + achternaam">
+        </div>
+        <div class="form-group">
+          <label>Bedrijf / Brouwerij</label>
+          <input type="text" id="companyName" placeholder="Wordt ingevuld via KVK">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>E-mailadres</label>
+          <input type="email" id="contactEmail" placeholder="naam@voorbeeld.nl">
+        </div>
+        <div class="form-group">
+          <label>Telefoonnummer</label>
+          <input type="tel" id="contactPhone" placeholder="06-12345678">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- ── SECTION 2: LABEL TYPE ── -->
+    <div class="form-section-title">Type Label</div>
+
+    <div class="option-grid">
+      <label class="option-card">
+        <input type="radio" name="labelType" value="rond" checked>
+        <div class="option-label">
+          <div class="option-icon">⬤</div>
+          <div class="option-name">Rond</div>
+          <div class="option-desc">Klassiek bierlabel</div>
+        </div>
+      </label>
+      <label class="option-card">
+        <input type="radio" name="labelType" value="rechthoek">
+        <div class="option-label">
+          <div class="option-icon">▬</div>
+          <div class="option-name">Rechthoek</div>
+          <div class="option-desc">Breed of hoog formaat</div>
+        </div>
+      </label>
+      <label class="option-card">
+        <input type="radio" name="labelType" value="ovaal">
+        <div class="option-label">
+          <div class="option-icon">⬮</div>
+          <div class="option-name">Ovaal</div>
+          <div class="option-desc">Elegant, afgerond</div>
+        </div>
+      </label>
+      <label class="option-card">
+        <input type="radio" name="labelType" value="custom">
+        <div class="option-label">
+          <div class="option-icon">✦</div>
+          <div class="option-name">Op Maat</div>
+          <div class="option-desc">Eigen stansvorm</div>
+        </div>
+      </label>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Afmeting (breedte × hoogte mm)</label>
+        <input type="text" placeholder="bijv. 90 × 120">
+      </div>
+      <div class="form-group">
+        <label>Aantal kleuren</label>
+        <select>
+          <option>Full colour (CMYK)</option>
+          <option>1 kleur (PMS)</option>
+          <option>2 kleuren (PMS)</option>
+          <option>Zwart/wit</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- ── SECTION 3: MATERIAAL ── -->
+    <div class="form-section-title">Materiaal & Afwerking</div>
+
+    <div class="option-grid">
+      <label class="option-card">
+        <input type="radio" name="material" value="vinyl" checked>
+        <div class="option-label">
+          <div class="option-icon">💧</div>
+          <div class="option-name">Vinyl</div>
+          <div class="option-desc">Waterbestendig</div>
+        </div>
+      </label>
+      <label class="option-card">
+        <input type="radio" name="material" value="papier">
+        <div class="option-label">
+          <div class="option-icon">📄</div>
+          <div class="option-name">Gesatineerd Papier</div>
+          <div class="option-desc">Glad, strak</div>
+        </div>
+      </label>
+      <label class="option-card">
+        <input type="radio" name="material" value="kraft">
+        <div class="option-label">
+          <div class="option-icon">🌾</div>
+          <div class="option-name">Kraft</div>
+          <div class="option-desc">Natuurlijk, ambachtelijk</div>
+        </div>
+      </label>
+      <label class="option-card">
+        <input type="radio" name="material" value="textuur">
+        <div class="option-label">
+          <div class="option-icon">🏔️</div>
+          <div class="option-name">Textuurpapier</div>
+          <div class="option-desc">Voelbaar, premium</div>
+        </div>
+      </label>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Afwerking</label>
+        <select>
+          <option>Mat laminaat</option>
+          <option>Glans laminaat</option>
+          <option>Soft-touch laminaat</option>
+          <option>Geen laminaat</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Lijmsoort</label>
+        <select>
+          <option>Permanent (standaard)</option>
+          <option>Verwijderbaar</option>
+          <option>Diepvries-bestendig</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- ── SECTION 4: SPECIAL TREATMENTS ── -->
+    <div class="form-section-title">Speciale Bewerkingen</div>
+
+    <div class="treatment-grid">
+      <label class="treatment-item">
+        <input type="checkbox" name="treatments" value="folie-goud">
+        <div class="treatment-label">
+          <div class="treatment-icon">✨</div>
+          <div class="treatment-text">
+            <div class="treatment-name">Goudfolie</div>
+            <div class="treatment-price">+ €0,04/label</div>
+          </div>
+        </div>
+      </label>
+      <label class="treatment-item">
+        <input type="checkbox" name="treatments" value="folie-zilver">
+        <div class="treatment-label">
+          <div class="treatment-icon">🪩</div>
+          <div class="treatment-text">
+            <div class="treatment-name">Zilverfolie</div>
+            <div class="treatment-price">+ €0,04/label</div>
+          </div>
+        </div>
+      </label>
+      <label class="treatment-item">
+        <input type="checkbox" name="treatments" value="emboss">
+        <div class="treatment-label">
+          <div class="treatment-icon">🔲</div>
+          <div class="treatment-text">
+            <div class="treatment-name">Reliëfdruk</div>
+            <div class="treatment-price">+ €0,05/label</div>
+          </div>
+        </div>
+      </label>
+      <label class="treatment-item">
+        <input type="checkbox" name="treatments" value="spotlak">
+        <div class="treatment-label">
+          <div class="treatment-icon">💎</div>
+          <div class="treatment-text">
+            <div class="treatment-name">Spot UV lak</div>
+            <div class="treatment-price">+ €0,03/label</div>
+          </div>
+        </div>
+      </label>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- ── SECTION 5: QUANTITY ── -->
+    <div class="form-section-title">Oplage</div>
+
+    <div class="qty-display">
+      <div class="qty-number" id="qtyNumber">500</div>
+      <div class="qty-label">labels</div>
+    </div>
+    <input type="range" class="qty-slider" id="qtySlider" min="0" max="1000" value="303" step="1">
+    <div class="qty-ticks" id="qtyTicks"></div>
+
+    <div class="price-bar">
+      <div>
+        <div class="price-label">Geschatte prijs</div>
+        <div class="price-per" id="pricePer">€0,05 per label</div>
+      </div>
+      <div class="price-value" id="priceTotal">€25,00</div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- ── SECTION 6: DESIGN UPLOAD ── -->
+    <div class="form-section-title">Ontwerp</div>
+
+    <label class="upload-zone" id="uploadZone">
+      <div class="upload-icon">📎</div>
+      <div class="upload-text" id="uploadText">Sleep je bestand hierheen of klik om te uploaden</div>
+      <div class="upload-hint">PDF, AI, EPS, PNG of JPG — max 50MB</div>
+      <input type="file" id="fileInput" accept=".pdf,.ai,.eps,.png,.jpg,.jpeg">
+    </label>
+
+    <div class="form-row single">
+      <div class="form-group">
+        <label>Opmerkingen over je ontwerp</label>
+        <textarea placeholder="Heb je specifieke wensen? Beschrijf ze hier..."></textarea>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- ── SECTION 7: DELIVERY ── -->
+    <div class="form-section-title">Levering</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Gewenste levertijd</label>
+        <select>
+          <option>Standaard (5 werkdagen)</option>
+          <option>Spoed (3 werkdagen) + 25%</option>
+          <option>Express (1-2 werkdagen) + 50%</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Gewenste leverdatum</label>
+        <input type="date">
+      </div>
+    </div>
+
+    <div class="form-row single">
+      <div class="form-group">
+        <label>Bezorgadres <span id="addrKvkNote" style="font-weight:400;color:rgba(74,40,0,0.35);font-size:0.72rem;display:none;">— ingevuld via KVK</span></label>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Straat + huisnummer</label>
+        <input type="text" id="addrStreet" placeholder="Ginnekenweg 142A">
+      </div>
+      <div class="form-group">
+        <label>Postcode + plaats</label>
+        <input type="text" id="addrCity" placeholder="4835 NH Breda">
+      </div>
+    </div>
+
+    <!-- ── SUBMIT ── -->
+    <div class="submit-row">
+      <div class="submit-note">Je ontvangt binnen 24 uur een vrijblijvende offerte op het opgegeven e-mailadres.</div>
+      <button class="btn-submit" type="button">Offerte Aanvragen →</button>
+    </div>
+  </div>
+
+</div>
+
+<footer>© 2026 BrewTag · Bierlabels op Maat · Met zorg gebrouwen</footer>
+
+<script>
+  // ── KVK LOOKUP ──
+  const KVK_MOCK = {
+    "12345678": {
+      kvk_number: "12345678", name: "Bakkerij De Gouden Korst B.V.",
+      street: "Ginnekenweg", house_number: "142", house_number_addition: "A",
+      postal_code: "4835 NH", city: "Breda",
+      full_address: "Ginnekenweg 142A 4835 NH Breda", phone: "076-5223344"
+    },
+    "69599084": {
+      kvk_number: "69599084", name: "Bol.com B.V.",
+      street: "Papendorpseweg", house_number: "100", house_number_addition: null,
+      postal_code: "3528 BJ", city: "Utrecht",
+      full_address: "Papendorpseweg 100 3528 BJ Utrecht", phone: null
+    }
+  };
+
+  function kvkValidate(val) {
+    const n = (val || '').replace(/\s+/g, '');
+    if (!/^\d{8}$/.test(n)) return { valid: false, error: 'KVK nummer moet exact 8 cijfers zijn.', normalized: null };
+    return { valid: true, error: null, normalized: n };
+  }
+
+  function kvkLookup(num) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const r = KVK_MOCK[num];
+        if (r) resolve(r); else reject(new Error('Geen bedrijf gevonden voor KVK ' + num));
+      }, 500 + Math.random() * 500);
+    });
+  }
+
+  const kvkInput = document.getElementById('kvkInput');
+  const kvkBtn = document.getElementById('kvkBtn');
+  const kvkDot = document.getElementById('kvkDot');
+  const kvkStatusText = document.getElementById('kvkStatusText');
+  const kvkResultDiv = document.getElementById('kvkResult');
+  const kvkErrorDiv = document.getElementById('kvkError');
+
+  function kvkSetStatus(state, msg) {
+    kvkDot.className = 'kvk-dot ' + state;
+    kvkStatusText.textContent = msg;
+  }
+
+  function kvkShowResult(data) {
+    const addition = data.house_number_addition || '';
+    const streetFull = data.street + ' ' + data.house_number + addition;
+    const cityFull = data.postal_code + ' ' + data.city;
+    const phoneLine = data.phone
+      ? `<div><div class="kvk-field-label">Telefoon</div><div class="kvk-field-value">${data.phone}</div></div>`
+      : `<div><div class="kvk-field-label">Telefoon</div><div class="kvk-field-value empty">Niet beschikbaar via KVK</div></div>`;
+
+    kvkResultDiv.innerHTML = `
+      <div class="kvk-result-card">
+        <div class="kvk-result-header">
+          <div class="kvk-result-badge">✓ Bedrijf gevonden</div>
+          <button class="kvk-result-clear" onclick="kvkClear()">Wissen</button>
+        </div>
+        <div class="kvk-result-name">${data.name}</div>
+        <div class="kvk-result-grid">
+          <div><div class="kvk-field-label">KVK Nummer</div><div class="kvk-field-value">${data.kvk_number}</div></div>
+          <div><div class="kvk-field-label">Adres</div><div class="kvk-field-value">${data.full_address}</div></div>
+          ${phoneLine}
+        </div>
+      </div>`;
+    kvkResultDiv.style.display = 'block';
+    kvkErrorDiv.style.display = 'none';
+
+    // Auto-fill form fields
+    document.getElementById('companyName').value = data.name;
+    if (data.phone) document.getElementById('contactPhone').value = data.phone;
+
+    // Auto-fill delivery address
+    document.getElementById('addrStreet').value = streetFull;
+    document.getElementById('addrCity').value = cityFull;
+    document.getElementById('addrKvkNote').style.display = 'inline';
+  }
+
+  function kvkShowError(msg) {
+    kvkErrorDiv.innerHTML = `<div class="kvk-error-msg">${msg}</div>`;
+    kvkErrorDiv.style.display = 'block';
+    kvkResultDiv.style.display = 'none';
+  }
+
+  function kvkClear() {
+    kvkResultDiv.style.display = 'none';
+    kvkResultDiv.innerHTML = '';
+    kvkErrorDiv.style.display = 'none';
+    kvkInput.value = '';
+    kvkSetStatus('idle', 'Voer een KVK nummer in');
+    document.getElementById('companyName').value = '';
+    document.getElementById('contactPhone').value = '';
+    document.getElementById('addrStreet').value = '';
+    document.getElementById('addrCity').value = '';
+    document.getElementById('addrKvkNote').style.display = 'none';
+  }
+
+  async function kvkDoLookup() {
+    const { valid, error, normalized } = kvkValidate(kvkInput.value);
+    kvkErrorDiv.style.display = 'none';
+    kvkResultDiv.style.display = 'none';
+
+    if (!valid) {
+      kvkSetStatus('error', error);
+      kvkShowError(error);
+      return;
+    }
+
+    kvkSetStatus('searching', 'Opzoeken bij KVK...');
+    kvkBtn.disabled = true;
+    kvkBtn.classList.add('loading');
+    kvkBtn.textContent = '...';
+
+    try {
+      const data = await kvkLookup(normalized);
+      kvkSetStatus('found', 'Bedrijf gevonden');
+      kvkShowResult(data);
+    } catch (err) {
+      kvkSetStatus('error', err.message);
+      kvkShowError(err.message);
+    } finally {
+      kvkBtn.disabled = false;
+      kvkBtn.classList.remove('loading');
+      kvkBtn.textContent = 'Opzoeken';
+    }
+  }
+
+  kvkBtn.addEventListener('click', kvkDoLookup);
+  kvkInput.addEventListener('keydown', e => { if (e.key === 'Enter') kvkDoLookup(); });
+  kvkInput.addEventListener('input', () => {
+    kvkErrorDiv.style.display = 'none';
+    const val = kvkInput.value.replace(/\s+/g, '');
+    if (val.length === 8 && /^\d{8}$/.test(val)) {
+      kvkSetStatus('idle', 'Druk Enter of klik Opzoeken');
+    } else if (val.length > 0) {
+      kvkSetStatus('idle', val.length + '/8 cijfers');
+    } else {
+      kvkSetStatus('idle', 'Voer een KVK nummer in');
+    }
+  });
+
+  // ── QUANTITY SLIDER + PRICE ──
+  const slider = document.getElementById('qtySlider');
+  const qtyNum = document.getElementById('qtyNumber');
+  const pricePer = document.getElementById('pricePer');
+  const priceTotal = document.getElementById('priceTotal');
+
+  function formatNum(n) { return n.toLocaleString('nl-NL'); }
+  function formatPrice(n) { return '€' + n.toFixed(2).replace('.', ','); }
+
+  // Logarithmic mapping: slider 0-1000 → qty 50-100000
+  const QTY_MIN = 50, QTY_MAX = 100000, SLIDER_MAX = 1000;
+  const LOG_MIN = Math.log(QTY_MIN), LOG_MAX = Math.log(QTY_MAX);
+
+  function sliderToQty(sliderVal) {
+    const t = sliderVal / SLIDER_MAX;
+    const raw = Math.exp(LOG_MIN + t * (LOG_MAX - LOG_MIN));
+    // Snap to nice round numbers
+    if (raw <= 100) return Math.round(raw / 10) * 10;
+    if (raw <= 500) return Math.round(raw / 25) * 25;
+    if (raw <= 2000) return Math.round(raw / 50) * 50;
+    if (raw <= 10000) return Math.round(raw / 100) * 100;
+    if (raw <= 50000) return Math.round(raw / 500) * 500;
+    return Math.round(raw / 1000) * 1000;
+  }
+
+  function qtyToSlider(qty) {
+    const t = (Math.log(qty) - LOG_MIN) / (LOG_MAX - LOG_MIN);
+    return Math.round(t * SLIDER_MAX);
+  }
+
+  function getPricePerLabel(qty) {
+    return 0.05;
+  }
+
+  // Build tick marks at correct visual positions
+  const TICKS = [50, 250, 1000, 5000, 25000, 100000];
+  const ticksDiv = document.getElementById('qtyTicks');
+  TICKS.forEach(val => {
+    const pos = qtyToSlider(val) / SLIDER_MAX * 100;
+    const span = document.createElement('span');
+    span.style.position = 'absolute';
+    span.style.left = pos + '%';
+    span.style.transform = 'translateX(-50%)';
+    span.textContent = val >= 1000 ? formatNum(val) : val;
+    ticksDiv.appendChild(span);
+  });
+
+  function updatePrice() {
+    const qty = sliderToQty(parseInt(slider.value));
+    const ppl = getPricePerLabel(qty);
+    const total = qty * ppl;
+    qtyNum.textContent = formatNum(qty);
+    pricePer.textContent = formatPrice(ppl) + ' per label';
+    priceTotal.textContent = formatPrice(total);
+  }
+
+  // Set initial position to 500
+  slider.value = qtyToSlider(500);
+  slider.addEventListener('input', updatePrice);
+  updatePrice();
+
+  // ── FILE UPLOAD ──
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  const uploadText = document.getElementById('uploadText');
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+      uploadText.textContent = '✓ ' + fileInput.files[0].name;
+      uploadZone.style.borderColor = '#b8860b';
+      uploadZone.style.background = 'rgba(184,134,11,0.08)';
+    }
+  });
+
+  // ── FOAM CANVAS ──
+  const foamCanvas = document.getElementById('foamCanvas');
+  const fctx = foamCanvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const FOAM_H = 180;
+  const CANVAS_H = FOAM_H + 80;
+  let foamW = 0, foamCells = [], foamDrips = [];
+  let foamMouseX = -9999, foamMouseY = -9999;
+
+  document.addEventListener('mousemove', e => { foamMouseX = e.clientX; foamMouseY = e.clientY + window.scrollY; });
+  document.addEventListener('mouseleave', () => { foamMouseX = -9999; foamMouseY = -9999; });
+  document.addEventListener('touchmove', e => { const t = e.touches[0]; foamMouseX = t.clientX; foamMouseY = t.clientY + window.scrollY; }, { passive: true });
+  document.addEventListener('touchend', () => { foamMouseX = -9999; foamMouseY = -9999; });
+
+  function initFoamCells() {
+    const W = window.innerWidth; foamW = W;
+    foamCells = []; foamDrips = [];
+    function addZone(yMin, yMax, rMin, rMax, density) {
+      const count = Math.floor(W*(yMax-yMin)*density/((rMin+rMax)/2)**2);
+      for (let i = 0; i < count; i++) {
+        const r = rMin+Math.random()*(rMax-rMin);
+        const hx = Math.random()*(W+20)-10, hy = yMin+Math.random()*(yMax-yMin);
+        foamCells.push({hx,hy,r,x:hx,y:hy,vx:0,vy:0,warmth:Math.random()*10,brightness:250+Math.random()*5,hlChance:Math.random(),hlAlpha:0.4+Math.random()*0.5});
+      }
+    }
+    addZone(0,55,1,2.5,0.35); addZone(40,100,2,4,0.2); addZone(85,140,3,6,0.12); addZone(125,175,4,9,0.06); addZone(165,FOAM_H+10,3,7,0.025);
+    foamCells.sort((a,b)=>a.r-b.r);
+    const dc = 6+Math.floor(Math.random()*5);
+    for (let d=0;d<dc;d++) { const dx=Math.random()*W,sy=FOAM_H-25+Math.random()*15,dl=20+Math.random()*50,w=6+Math.random()*12,n=5+Math.floor(Math.random()*10);
+      for (let i=0;i<n;i++) { const t=i/n,r=(1-t*0.7)*(1.5+Math.random()*3);if(r<0.5)continue;
+        const hx=dx+(Math.random()-0.5)*w*(1-t*0.5),hy=sy+t*dl;foamDrips.push({hx,hy,r,x:hx,y:hy,vx:0,vy:0,alpha:0.6-t*0.4});}}
+  }
+  function setupFoamCanvas() { const W=window.innerWidth; foamCanvas.width=W*dpr; foamCanvas.height=CANVAS_H*dpr; foamCanvas.style.width=W+'px'; foamCanvas.style.height=CANVAS_H+'px'; }
+  function renderFoam() {
+    const W=foamW,mx=foamMouseX,my=foamMouseY;
+    fctx.setTransform(dpr,0,0,dpr,0,0); fctx.clearRect(0,0,W,CANVAS_H);
+    const bg=fctx.createLinearGradient(0,0,0,CANVAS_H);
+    bg.addColorStop(0,'#fffef0');bg.addColorStop(0.25,'#fffce8');bg.addColorStop(0.55,'#faf0c0');bg.addColorStop(0.75,'#f2cc44');bg.addColorStop(0.9,'#e6b41a');bg.addColorStop(1,'#d4a012');
+    fctx.fillStyle=bg;fctx.fillRect(0,0,W,CANVAS_H);
+    const tg=fctx.createLinearGradient(0,0,0,55);tg.addColorStop(0,'#fffef0');tg.addColorStop(0.5,'rgba(255,254,240,0.95)');tg.addColorStop(1,'rgba(255,254,240,0)');
+    fctx.fillStyle=tg;fctx.fillRect(0,0,W,55);
+    for(const c of foamCells){const dx=c.x-mx,dy=c.y-my,dist=Math.sqrt(dx*dx+dy*dy);if(dist<140&&dist>0){const f=(1-dist/140)*5*(c.r/5);c.vx+=(dx/dist)*f;c.vy+=(dy/dist)*f;}c.vx+=(c.hx-c.x)*0.06;c.vy+=(c.hy-c.y)*0.06;c.vx*=0.82;c.vy*=0.82;c.x+=c.vx;c.y+=c.vy;}
+    for(const d of foamDrips){const dx=d.x-mx,dy=d.y-my,dist=Math.sqrt(dx*dx+dy*dy);if(dist<140&&dist>0){const f=(1-dist/140)*5*(d.r/3);d.vx+=(dx/dist)*f;d.vy+=(dy/dist)*f;}d.vx+=(d.hx-d.x)*0.05;d.vy+=(d.hy-d.y)*0.05;d.vx*=0.8;d.vy*=0.8;d.x+=d.vx;d.y+=d.vy;}
+    for(const c of foamCells){const depth=c.hy/FOAM_H,alpha=depth<0.3?0.95:depth<0.7?0.9-(depth-0.3)*0.5:0.7-(depth-0.7)*1.8;if(alpha<=0)continue;const{x,y,r,warmth,brightness}=c;
+      if(r<2.5){fctx.beginPath();fctx.arc(x,y,r,0,Math.PI*2);fctx.fillStyle=`rgba(${brightness},${brightness-warmth},${brightness-warmth*2},${alpha})`;fctx.fill();}
+      else{const g=fctx.createRadialGradient(x-r*0.2,y-r*0.2,r*0.1,x,y,r);g.addColorStop(0,`rgba(${brightness},${brightness-warmth},${brightness-warmth*2},${Math.min(alpha+0.1,1)})`);g.addColorStop(0.7,`rgba(${brightness-5},${brightness-8-warmth},${brightness-15-warmth},${alpha})`);g.addColorStop(1,`rgba(${brightness-15},${brightness-20},${brightness-30},${alpha*0.6})`);fctx.beginPath();fctx.arc(x,y,r,0,Math.PI*2);fctx.fillStyle=g;fctx.fill();}
+      fctx.beginPath();fctx.arc(x,y,r,0,Math.PI*2);fctx.strokeStyle=`rgba(180,170,140,${depth<0.3?0.1:0.18})`;fctx.lineWidth=r<2.5?0.3:0.5;fctx.stroke();
+      if(r>3&&c.hlChance>0.3){const hr=r*0.3;const hg=fctx.createRadialGradient(x-r*0.3,y-r*0.35,0,x-r*0.3,y-r*0.35,hr);hg.addColorStop(0,`rgba(255,255,255,${c.hlAlpha})`);hg.addColorStop(1,'rgba(255,255,255,0)');fctx.beginPath();fctx.arc(x-r*0.3,y-r*0.35,hr,0,Math.PI*2);fctx.fillStyle=hg;fctx.fill();}}
+    for(const d of foamDrips){if(d.alpha<=0)continue;fctx.beginPath();fctx.arc(d.x,d.y,d.r,0,Math.PI*2);fctx.fillStyle=`rgba(255,253,242,${d.alpha})`;fctx.fill();fctx.strokeStyle=`rgba(180,170,140,${d.alpha*0.25})`;fctx.lineWidth=0.3;fctx.stroke();}
+  }
+  setupFoamCanvas();initFoamCells();
+  window.addEventListener('resize',()=>{setupFoamCanvas();initFoamCells();});
+  function animateFoam(){renderFoam();requestAnimationFrame(animateFoam);}animateFoam();
+
+  // ── BEER BUBBLES ──
+  const bc = document.getElementById('bubbles');
+  const BW=()=>window.innerWidth, BH=()=>window.innerHeight;
+  let mouseXB=-9999, mouseYB=-9999;
+  document.addEventListener('mousemove',e=>{mouseXB=e.clientX;mouseYB=e.clientY;});
+  document.addEventListener('mouseleave',()=>{mouseXB=-9999;mouseYB=-9999;});
+  document.addEventListener('touchmove',e=>{const t=e.touches[0];mouseXB=t.clientX;mouseYB=t.clientY;},{passive:true});
+  document.addEventListener('touchend',()=>{mouseXB=-9999;mouseYB=-9999;});
+  class Bubble{constructor(){this.el=document.createElement('div');this.el.className='bubble';this.reset(true);bc.appendChild(this.el);}
+    reset(init){const r=Math.random();if(r<0.45)this.size=Math.random()*4+2;else if(r<0.8)this.size=Math.random()*6+6;else if(r<0.95)this.size=Math.random()*8+12;else this.size=Math.random()*6+20;
+      this.el.style.width=this.size+'px';this.el.style.height=this.size+'px';
+      if(this.size<6){this.el.style.border='0.5px solid rgba(255,255,255,0.4)';this.el.style.boxShadow='none';}else{this.el.style.border='1px solid rgba(255,255,255,0.6)';this.el.style.boxShadow='inset 0 -1px 3px rgba(255,255,255,0.15), 0 0 4px rgba(255,255,255,0.2)';}
+      this.x=Math.random()*BW()*0.8+BW()*0.1;this.y=init?Math.random()*BH():BH()+20;this.baseX=this.x;this.vx=0;this.vy=0;this.speed=(0.3+Math.random()*0.8)*(1-this.size/40+0.4);
+      this.wobbleAmp=Math.random()*20+5;this.wobbleSpeed=Math.random()*0.02+0.005;this.wobbleOffset=Math.random()*Math.PI*2;this.opacity=0.5+Math.random()*0.5;
+      this.el.style.opacity=init?this.opacity:0;this.age=init?Math.random()*1000:0;this.fadeIn=!init;}
+    update(){this.age++;if(this.fadeIn&&this.age<30)this.el.style.opacity=(this.age/30)*this.opacity;else if(this.fadeIn&&this.age===30){this.el.style.opacity=this.opacity;this.fadeIn=false;}
+      this.y-=this.speed;const wobble=Math.sin(this.age*this.wobbleSpeed+this.wobbleOffset)*this.wobbleAmp;let tx=this.baseX+wobble;
+      const dx=this.x-mouseXB,dy=this.y-mouseYB,dist=Math.sqrt(dx*dx+dy*dy);if(dist<120&&dist>0){const f=(1-dist/120)*3.5;this.vx+=(dx/dist)*f;this.vy+=(dy/dist)*f*0.5;}
+      this.vx*=0.92;this.vy*=0.92;this.x+=this.vx;this.y+=this.vy;this.x+=(tx-this.x)*0.02;
+      if(this.y<100)this.el.style.opacity=Math.max(0,(this.y/100)*this.opacity);if(this.y<-30){this.reset(false);return;}
+      this.el.style.transform=`translate(${this.x}px, ${this.y}px)`;}}
+  const bubbles=[];for(let i=0;i<70;i++)bubbles.push(new Bubble());
+  function animateBubbles(){for(const b of bubbles)b.update();requestAnimationFrame(animateBubbles);}animateBubbles();
+</script>
+
+</body>
+</html>

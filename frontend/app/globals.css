@@ -120,3 +120,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .font-brew-heading {
+    font-family: var(--font-playfair), ui-serif, Georgia, serif;
+  }
+  .font-brew-sans {
+    font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+}

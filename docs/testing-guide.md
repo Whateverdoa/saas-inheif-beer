@@ -5,7 +5,7 @@
 ### 1. Install Dependencies
 
 ```bash
-cd webhooks-skeleton
+cd saas-inheif-beer
 uv venv && source .venv/bin/activate
 uv pip install -r requirements.txt
 ```

@@ -28,7 +28,8 @@ export default function BeerLabelsPage() {
         setLabelTypes(labels)
         setSubstrates(subs)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load data')
+        const msg = err instanceof Error ? err.message : 'Failed to load data'
+        setError(msg === 'Failed to fetch' ? 'Cannot reach the API. Ensure NEXT_PUBLIC_API_URL is set for the frontend and the backend is running.' : msg)
       } finally {
         setLoading(false)
       }
@@ -44,50 +45,59 @@ export default function BeerLabelsPage() {
     ? substrates.filter(s => selectedLabelType.recommended_substrates.includes(s.name))
     : substrates
 
+  const pageBg = 'min-h-screen bg-amber-50/30 dark:bg-zinc-950'
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
-        <div className="text-lg">Loading beer label options...</div>
+      <div className={`${pageBg} flex items-center justify-center`}>
+        <div className="text-lg text-zinc-600 dark:text-zinc-400">Loading beer label options...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
+      <div className={`${pageBg} flex items-center justify-center`}>
         <div className="text-red-500 text-lg">{error}</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
+    <div className={pageBg}>
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <header className="mb-8">
-          <Link href="/" className="text-amber-600 hover:text-amber-700 text-sm mb-2 inline-block">
+        <header className="mb-8 pb-6 border-b border-amber-100 dark:border-amber-900/30">
+          <Link href="/" className="text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 text-sm font-medium mb-3 inline-block">
             ← Back to Home
           </Link>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-2">
-                🍺 Beer Label Orders
+              <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-1">
+                Beer label orders
               </h1>
               <p className="text-zinc-600 dark:text-zinc-400">
-                Select your label format, substrate, and quantity
+                Choose format, substrate, and quantity
               </p>
             </div>
-            <Link
-              href="/beer/compliance"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2"
-            >
-              🇪🇺 EU Compliance Text
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/beer/order"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white rounded-lg text-sm font-medium"
+              >
+                Offerte / order
+              </Link>
+              <Link
+                href="/beer/compliance"
+                className="px-4 py-2 border border-amber-600/50 dark:border-amber-500/50 text-amber-800 dark:text-amber-300 rounded-lg text-sm font-medium hover:bg-amber-50 dark:hover:bg-amber-950/30"
+              >
+                🇪🇺 EU compliance
+              </Link>
+            </div>
           </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Step 1: Category & Label Type */}
-          <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm border border-zinc-200/80 dark:border-zinc-700/80">
             <h2 className="text-lg font-semibold mb-4 text-zinc-900 dark:text-white">
               1. Select Label Format
             </h2>
@@ -143,7 +153,7 @@ export default function BeerLabelsPage() {
           </div>
 
           {/* Step 2: Substrate */}
-          <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm border border-zinc-200/80 dark:border-zinc-700/80">
             <h2 className="text-lg font-semibold mb-4 text-zinc-900 dark:text-white">
               2. Select Substrate
             </h2>
@@ -197,7 +207,7 @@ export default function BeerLabelsPage() {
           </div>
 
           {/* Step 3: Summary & Order */}
-          <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm border border-zinc-200/80 dark:border-zinc-700/80">
             <h2 className="text-lg font-semibold mb-4 text-zinc-900 dark:text-white">
               3. Order Summary
             </h2>
@@ -271,7 +281,7 @@ export default function BeerLabelsPage() {
               disabled={!selectedLabelType || !selectedSubstrate}
               className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
                 selectedLabelType && selectedSubstrate
-                  ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                  ? 'bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white'
                   : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 cursor-not-allowed'
               }`}
             >
@@ -287,7 +297,7 @@ export default function BeerLabelsPage() {
         </div>
 
         {/* Label Types Reference Table */}
-        <div className="mt-12 bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm">
+        <div className="mt-12 bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-sm border border-zinc-200/80 dark:border-zinc-700/80">
           <h2 className="text-lg font-semibold mb-4 text-zinc-900 dark:text-white">
             📏 Standard Beer Label Formats
           </h2>
