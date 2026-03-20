@@ -1,14 +1,8 @@
-# Deploy Next.js (frontend/) to Vercel: preview on PRs, production on push to main.
+# Preview on PR, production on push to main — deploy only the frontend/ tree (monorepo).
+# Matches Vercel dashboard: project "frontend", root = frontend/
 #
-# Enable: GitHub repo → Settings → Secrets and variables → Actions → Variables:
-#   VERCEL_ACTIONS_DEPLOY = true
-# Secrets (required when enabled):
-#   VERCEL_TOKEN — https://vercel.com/account/tokens
-#   VERCEL_ORG_ID — team id (team_...) under Vercel team settings
-#   VERCEL_PROJECT_ID_FRONTEND — project id (prj_...) for the "frontend" Vercel project
-#
-# If the Vercel Git integration already deploys this project on every push, you may get
-# duplicate builds; then leave VERCEL_ACTIONS_DEPLOY unset and rely on Vercel only.
+# GitHub → Settings → Actions → Variables: VERCEL_ACTIONS_DEPLOY = true
+# Secrets: VERCEL_TOKEN, VERCEL_ORG_ID (team_…), VERCEL_PROJECT_ID_FRONTEND (prj_…)
 
 name: Vercel — frontend
 
@@ -29,7 +23,6 @@ concurrency:
 
 jobs:
   deploy:
-    # Opt-in: avoids failing CI when secrets are not configured.
     if: >-
       vars.VERCEL_ACTIONS_DEPLOY == 'true' &&
       (github.event_name != 'pull_request' ||
@@ -39,12 +32,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Deploy path = ./frontend so CLI root matches dashboard "Root Directory" (no root vercel.json mix-up).
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
-          working-directory: frontend
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          prod: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            npx --yes vercel@latest deploy frontend --token="$VERCEL_TOKEN" --yes --prod
+          else
+            npx --yes vercel@latest deploy frontend --token="$VERCEL_TOKEN" --yes
+          fi
