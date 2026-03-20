@@ -11,9 +11,13 @@ This GitHub repo connects to **two separate Vercel projects** (same team, e.g. `
 
 If the **`frontend`** Vercel project has Root Directory left as **repository root** (`.`), the build fails with:
 
-`No Next.js version detected … check your Root Directory setting matches the directory of your package.json`
+**`Build Failed` — `No Next.js version detected`. Make sure your package.json has "next" … **Also check your Root Directory setting** …**
 
-**Fix (one-time):** Vercel → project **`frontend`** → **Settings → General** → **Root Directory** → enter **`frontend`** → Save. Then **Deployments** → **⋯** on the latest `main` commit → **Redeploy** (or push an empty commit to `main`).
+That message is **misleading**: the repo-root `package.json` intentionally has **no** `next` (only the Python API + tooling). The Next.js app is in **`frontend/package.json`**.
+
+**Fix (one-time):** Vercel → project **`frontend`** (not `saas-inheif-beer`) → **Settings → General** → **Root Directory** → **`frontend`** → Save. Then **Deployments → Redeploy**.
+
+Short reference: **[VERCEL_FRONTEND_ROOT.md](./VERCEL_FRONTEND_ROOT.md)**.
 
 Until this is set, **Production keeps serving the last successful deploy** (older UI). Merging PRs will not update the live site.
 

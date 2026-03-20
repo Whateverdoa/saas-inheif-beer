@@ -3,6 +3,8 @@
 **Vercel (Next.js frontend + FastAPI):** zie **[DEPLOYMENT.md](./DEPLOYMENT.md)**.  
 Als het project **`frontend`** aan Git hangt met **Root Directory = `frontend`** en **Production branch = `main`**, deployt Vercel de UI **automatisch** bij elke merge naar `main` (geen aparte handmatige stap).
 
+→ Build error **“No Next.js version detected”**? **[VERCEL_FRONTEND_ROOT.md](./VERCEL_FRONTEND_ROOT.md)** (Root Directory moet `frontend` zijn, niet de repo-root).
+
 ## Quickstart (Python)
 ```bash
 uv venv && source .venv/bin/activate

@@ -1,6 +1,7 @@
 {
   "name": "saas-inheif-beer",
   "private": true,
+  "description": "Monorepo: FastAPI at repo root. The Next.js app lives in frontend/ — the Vercel project named \"frontend\" MUST use Root Directory \"frontend\" or builds fail with \"No Next.js version detected\". See VERCEL_FRONTEND_ROOT.md",
   "devDependencies": {
     "@playwright/test": "^1.48.2",
     "vercel": "^50.33.1"
