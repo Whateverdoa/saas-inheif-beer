@@ -36,6 +36,27 @@ The **`frontend`** and **`saas-inheif-beer`** projects each run their own build 
 
 **Checklist (both projects):** **Settings → Git** → correct repo, **Production Branch** = `main`; **Ignored Build Step** only if you really mean to skip.
 
+### Frontend deployt automatisch na merge — zo zet je het goed
+
+Vercel start zelf een **production build** bij een merge naar `main`; er is geen aparte “frontend oppicken”-stap als het project juist staat:
+
+| Stap | Vercel → project **`frontend`** | Waarde |
+|------|-----------------------------------|--------|
+| 1 | **Settings → Git → Connected Git Repository** | Dezelfde GitHub-repo als de backend |
+| 2 | **Production Branch** | `main` |
+| 3 | **Settings → General → Root Directory** | `frontend` |
+| 4 | **Settings → Git → Ignored Build Step** | **Leeg** (aanbevolen) → elke merge naar `main` bouwt de frontend opnieuw |
+
+**GitHub:** de **Vercel**-integratie moet op de repo staan (anders geen deploy bij push/merge).
+
+**Optioneel — minder builds:** alleen bouwen als `frontend/` wijzigt. **Ignored Build Step:**
+
+```bash
+git diff HEAD^ HEAD --quiet ./frontend/
+```
+
+(exit **0** = geen wijzigingen onder `frontend/` → skip build; exit **1** → wél builden.)
+
 ## Live URLs
 
 - **Backend (project `saas-inheif-beer`):** `https://saas-inheif-beer.vercel.app`
