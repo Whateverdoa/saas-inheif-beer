@@ -1,5 +1,6 @@
-# Vercel KB pattern: link → pull → build → deploy --prebuilt (avoids rootDirectory / path doubling).
 # Secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID_FRONTEND
+# Dashboard keeps rootDirectory=frontend for Git; CLI needs it cleared or paths double.
+# We PATCH via API before deploy, restore after (always).
 
 name: Deploy frontend
 
@@ -23,6 +24,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: API — clear rootDirectory for CLI
+        id: api_clear
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl -fsS -X PATCH \
+            "https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}?teamId=${VERCEL_ORG_ID}" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"rootDirectory":null}'
 
       - uses: actions/setup-node@v4
         with:
@@ -56,21 +69,6 @@ jobs:
           fi
           npx vercel@latest pull --yes --environment="$ENV" --token="$VERCEL_TOKEN"
 
-      # Pull writes rootDirectory: frontend (for Git clones). CI cwd is already frontend/ — drop it
-      # or vercel build uses .../frontend/frontend (missing) → spawn ENOENT.
-      - name: Normalize monorepo root for CI build
-        working-directory: frontend
-        run: |
-          node <<'NODE'
-          const fs = require("fs");
-          const p = ".vercel/project.json";
-          if (!fs.existsSync(p)) process.exit(0);
-          const j = JSON.parse(fs.readFileSync(p, "utf8"));
-          j.settings = j.settings || {};
-          delete j.settings.rootDirectory;
-          fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n");
-          NODE
-
       - name: Build
         working-directory: frontend
         env:
@@ -94,3 +92,15 @@ jobs:
           else
             npx vercel@latest deploy --prebuilt --yes --token="$VERCEL_TOKEN"
           fi
+
+      - name: API — restore rootDirectory for Git
+        if: always() && steps.api_clear.outcome == 'success'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl -fsS -X PATCH \
+            "https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}?teamId=${VERCEL_ORG_ID}" \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"rootDirectory":"frontend"}'
