@@ -25,6 +25,35 @@ Until this is set, **Production keeps serving the last successful deploy** (olde
 
 Each project has its **own** Vercel dashboard, env vars, and deployments. Pushes to `main` can trigger **both** if both are linked to the same repo with the correct root directories.
 
+## PR → preview; merge → productie (site)
+
+**Doel:** elke **PR** krijgt een **Preview-URL** met de nieuwe UI; na **merge naar `main`** gaat **productie** (`frontend-inheif.vercel.app`) mee.
+
+### Aanbevolen: Vercel Git-integratie (geen extra CI)
+
+1. **GitHub:** [Vercel GitHub App](https://github.com/apps/vercel) installeren op de **organisatie/user** die deze repo bevat (toegang tot deze repo).
+2. **Vercel → project `frontend`:** **Settings → Git** → dezelfde repo koppelen, **Production branch** = `main`.
+3. **Root Directory** = `frontend` (zie hierboven).
+4. Bij elke **push naar een PR-branch** maakt Vercel een **Preview deployment**; de bot post (meestal) een link op de PR. Na **merge** → **Production** voor dat project.
+
+**Let op:** het project **`saas-inheif-beer`** is de **API**; de **site** is **`frontend`**. Alleen als **`frontend`** mee-deployt zie je UI-wijzigingen op `frontend-inheif.vercel.app`.
+
+### Optioneel: GitHub Action (zelfde gedrag, expliciet)
+
+Als previews/productie niet automatisch lopen, kun je **[`.github/workflows/vercel-frontend.yml`](./.github/workflows/vercel-frontend.yml)** gebruiken:
+
+| GitHub → Actions | Waarde |
+|------------------|--------|
+| **Variable** | `VERCEL_ACTIONS_DEPLOY` = `true` (opt-in, anders wordt die job overgeslagen) |
+| **Secret** | `VERCEL_TOKEN` — [Vercel account tokens](https://vercel.com/account/tokens) |
+| **Secret** | `VERCEL_ORG_ID` — team-id (`team_…`, Vercel team settings) |
+| **Secret** | `VERCEL_PROJECT_ID_FRONTEND` — project-id (`prj_…`) van het Vercel-project **`frontend`** |
+
+- **PR** (zelfde repo; wijzigingen onder `frontend/`) → **preview** deploy.  
+- **Push naar `main`** → **`prod: true`** (productie).
+
+**Dubbele builds:** als zowel Vercel Git **als** deze Action actief zijn, bouwt Vercel twee keer — kies één primaire route of laat `VERCEL_ACTIONS_DEPLOY` uit.
+
 ## Automatic deploys (push / PR)
 
 With **Git connected** on each Vercel project, you do **not** need a custom GitHub Action for normal flows:

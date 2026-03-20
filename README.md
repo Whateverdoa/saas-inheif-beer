@@ -1,7 +1,7 @@
 # Webhooks Skeleton (Stripe + Polar + OGOS)
 
-**Vercel (Next.js frontend + FastAPI):** zie **[DEPLOYMENT.md](./DEPLOYMENT.md)**.  
-Als het project **`frontend`** aan Git hangt met **Root Directory = `frontend`** en **Production branch = `main`**, deployt Vercel de UI **automatisch** bij elke merge naar `main` (geen aparte handmatige stap).
+**Vercel (Next.js frontend + FastAPI):** zie **[DEPLOYMENT.md](./DEPLOYMENT.md)** — o.a. **PR → preview**, **merge → productie** voor de site (project **`frontend`**, niet alleen `saas-inheif-beer`).  
+Optioneel: `.github/workflows/vercel-frontend.yml` + variable `VERCEL_ACTIONS_DEPLOY=true` en Vercel-secrets.
 
 → Build error **“No Next.js version detected”**? **[VERCEL_FRONTEND_ROOT.md](./VERCEL_FRONTEND_ROOT.md)** (Root Directory moet `frontend` zijn, niet de repo-root).
 
