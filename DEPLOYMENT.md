@@ -1,29 +1,59 @@
 # Deployment Guide (Final)
 
-This project is deployed as **two Vercel projects**:
+This GitHub repo connects to **two separate Vercel projects** (same team, e.g. `inheif`):
 
-- **Backend (FastAPI)** from repository root
-- **Frontend (Next.js)** from subdirectory `frontend/`
+| Vercel project name | What it is | Root Directory in Vercel | Production URL (typical) |
+|---------------------|------------|---------------------------|---------------------------|
+| **`saas-inheif-beer`** | Backend — FastAPI on Python serverless | **Repository root** (`.`) | `https://saas-inheif-beer.vercel.app` |
+| **`frontend`** | Frontend — Next.js app | **`frontend/`** subdirectory | `https://frontend-inheif.vercel.app` |
+
+Each project has its **own** Vercel dashboard, env vars, and deployments. Pushes to `main` can trigger **both** if both are linked to the same repo with the correct root directories.
+
+## Automatic deploys (push / PR)
+
+With **Git connected** on each Vercel project, you do **not** need a custom GitHub Action for normal flows:
+
+| Git event | What happens |
+|-----------|----------------|
+| **Push to a branch** (e.g. PR branch) | **Preview deployment** — unique URL per branch/commit (PR comments if the Vercel GitHub app is installed on the org/repo). |
+| **Merge to the Production branch** (usually `main`) | **Production deployment** for that project. |
+
+The **`frontend`** and **`saas-inheif-beer`** projects each run their own build from the **same commit**; configure **Root Directory** separately (`frontend/` vs `.`).
+
+**If Production looks stale:** compare the deployment’s **git SHA** to GitHub `main`. Failed builds leave the last green Production deploy in place — fix the build, then merge or push again. Prefer redeploying from the **latest** commit, not an old successful one.
+
+**Checklist (both projects):** **Settings → Git** → correct repo, **Production Branch** = `main`; **Ignored Build Step** only if you really mean to skip.
 
 ## Live URLs
 
-- Backend API: `https://saas-inheif-beer.vercel.app`
-- Frontend app: `https://frontend-inheif.vercel.app`
+- **Backend (project `saas-inheif-beer`):** `https://saas-inheif-beer.vercel.app`
+- **Frontend (project `frontend`):** `https://frontend-inheif.vercel.app`
+
+## Frontend locales (NL / DE / FR / EN)
+
+All app routes live under a **locale prefix**: `/{nl|de|fr|en}/…`. Visiting `/` redirects to the best match from the `NEXT_LOCALE` cookie (if set), then `Accept-Language`, otherwise **`nl`**.
+
+Examples:
+
+- `https://frontend-inheif.vercel.app/nl/beer/order`
+- `https://frontend-inheif.vercel.app/en/beer`
+
+The **language switcher** (top-right on BrewTag pages) updates the URL and sets the `NEXT_LOCALE` cookie for later visits.
 
 ## Current Architecture
 
-### Backend project (`saas-inheif-beer`)
+### 1. Backend Vercel project: `saas-inheif-beer`
 
+- Git: **entire repo**, but Vercel **Root Directory** = `.` (repo root)
 - Uses `vercel.json` at repo root
 - Rewrites all traffic to `api/index.py`
-- Python dependencies are installed from `api/requirements.txt`
+- Python dependencies from `api/requirements.txt`
 
-### Frontend project (`frontend`)
+### 2. Frontend Vercel project: `frontend`
 
-- Root directory in Vercel is `frontend/`
-- Uses Next.js build pipeline
-- Calls backend with:
-  - `NEXT_PUBLIC_API_URL=https://saas-inheif-beer.vercel.app`
+- Git: **same repo**, Vercel **Root Directory** = `frontend/`
+- Next.js build (`npm run build`)
+- Calls the API using **`NEXT_PUBLIC_API_URL`** = your backend URL, e.g. `https://saas-inheif-beer.vercel.app`
 
 ## Deploy Commands
 
@@ -47,21 +77,21 @@ npx vercel --prod --scope inheif
 
 If frontend shows **Authentication Required**, disable project protection:
 
-1. Open `inheif/frontend`
+1. Open Vercel project **`frontend`** (team `inheif`)
 2. Go to `Settings -> Deployment Protection`
 3. Disable **Vercel Authentication**
 4. Disable any other protection (password/trusted IP) if enabled
 
-### Frontend env vars
+### Frontend env vars (project **`frontend`**)
 
-Set in `inheif/frontend -> Settings -> Environment Variables`:
+Vercel → project **`frontend`** → **Settings → Environment Variables**:
 
 - `NEXT_PUBLIC_API_URL=https://saas-inheif-beer.vercel.app`
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<your_value>` (if Clerk is enabled in frontend)
 
-### Backend env vars
+### Backend env vars (project **`saas-inheif-beer`**)
 
-Set in `inheif/saas-inheif-beer -> Settings -> Environment Variables`:
+Vercel → project **`saas-inheif-beer`** → **Settings → Environment Variables**:
 
 - `CLERK_SECRET_KEY=<your_value>` (required for auth endpoints)
 - `STRIPE_API_KEY=<your_value>` (if Stripe is enabled)
@@ -71,6 +101,7 @@ Set in `inheif/saas-inheif-beer -> Settings -> Environment Variables`:
 - `OGOS_BASE_URL=https://orders.optimumgroup.nl/OrderService`
 - `OGOS_MASTER_GUID=<your_value>` (if B2C flow uses master org)
 - `BEER_LABELS_ENABLED=true`
+- `KVK_API_KEY=<your_value>` (optional — [KVK Basisprofiel API](https://developers.kvk.nl); without it, only test KVK `12345678` / `69599084` work via built-in mock)
 
 ## Smoke Tests
 
@@ -87,11 +118,18 @@ Expected:
 - `/healthz` returns `{"ok": true}`
 - Beer endpoints return JSON arrays
 
-Then open:
+Then open (frontend project):
 
 - `https://frontend-inheif.vercel.app`
 - `https://frontend-inheif.vercel.app/beer`
+- `https://frontend-inheif.vercel.app/beer/order` (quote form + KVK lookup)
 - `https://frontend-inheif.vercel.app/beer/compliance`
+
+Optional API check (backend project):
+
+```bash
+curl "https://saas-inheif-beer.vercel.app/kvk/lookup/12345678"
+```
 
 ## Notes and Constraints
 
