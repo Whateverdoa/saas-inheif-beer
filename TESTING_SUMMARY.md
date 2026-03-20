@@ -36,7 +36,7 @@
 ### 1. Start the Development Server
 
 ```bash
-cd webhooks-skeleton
+cd saas-inheif-beer
 source .venv/bin/activate  # if using venv
 uvicorn app.main:app --reload --port 8000
 ```

@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrewTag — Bierlabels op Maat</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --beer-light: #f0c632;
+    --beer-mid: #d4a012;
+    --beer-deep: #b8860b;
+    --beer-dark: #8b6508;
+    --beer-glow: #e6b41a;
+    --foam-white: #fffef5;
+    --foam-cream: #fdf6d8;
+    --text-dark: #4a2800;
+    --text-mid: #6b3e06;
+    --glass-highlight: rgba(255,245,200,0.35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    background: linear-gradient(180deg,
+      #f2cc44 0%,
+      #e6b41a 15%,
+      #d4a012 35%,
+      #c08a0c 55%,
+      #a67206 75%,
+      #8b6508 100%
+    );
+    min-height: 100vh;
+    color: var(--text-dark);
+  }
+
+  /* ── FOAM ── */
+  .foam-wrap {
+    position: absolute; top: 0; left: 0; width: 100%;
+    z-index: 5; pointer-events: none;
+  }
+  .foam-canvas {
+    display: block; width: 100%;
+  }
+
+
+  /* ── BEER GLOW — light through liquid ── */
+  .beer-glow {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 35%,
+        rgba(242,204,68,0.25) 0%,
+        rgba(230,180,26,0.12) 40%,
+        transparent 70%
+      ),
+      radial-gradient(ellipse 40% 35% at 55% 30%,
+        rgba(255,220,80,0.15) 0%,
+        transparent 60%
+      );
+  }
+
+  /* ── GLASS ── */
+  .glass-edge-left, .glass-edge-right {
+    position: fixed; top: 0; width: 80px; height: 100%; z-index: 50; pointer-events: none;
+  }
+  .glass-edge-left { left: 0; background: linear-gradient(90deg, var(--glass-highlight) 0%, transparent 100%); }
+  .glass-edge-right { right: 0; background: linear-gradient(-90deg, rgba(255,255,255,0.2) 0%, transparent 100%); }
+
+  .condensation {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;
+    background:
+      radial-gradient(2px 3px at 12% 28%, rgba(255,245,200,0.4), transparent),
+      radial-gradient(3px 4px at 30% 52%, rgba(255,240,190,0.3), transparent),
+      radial-gradient(2px 3px at 52% 22%, rgba(255,242,195,0.35), transparent),
+      radial-gradient(3px 3px at 72% 42%, rgba(255,238,185,0.25), transparent),
+      radial-gradient(2px 2px at 88% 62%, rgba(255,245,200,0.4), transparent),
+      radial-gradient(3px 4px at 42% 82%, rgba(255,235,180,0.22), transparent),
+      radial-gradient(2px 2px at 18% 68%, rgba(255,240,190,0.3), transparent);
+  }
+
+  /* ── BUBBLES ── */
+  .bubbles-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; overflow: hidden; }
+  .bubble {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%,
+      rgba(255,255,255,0.95) 0%,
+      rgba(255,255,255,0.5) 25%,
+      rgba(255,255,255,0.2) 50%,
+      rgba(255,255,255,0.08) 70%,
+      transparent 100%
+    );
+    border: 1px solid rgba(255,255,255,0.6);
+    box-shadow: inset 0 -1px 3px rgba(255,255,255,0.15), 0 0 4px rgba(255,255,255,0.2);
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  /* ── CONTENT ── */
+  .content { position: relative; z-index: 10; max-width: 880px; margin: 0 auto; padding: 0 24px; }
+
+  .hero { padding-top: 150px; padding-bottom: 70px; text-align: center; }
+  .hero-badge {
+    display: inline-block; background: rgba(120,53,15,0.08); backdrop-filter: blur(8px);
+    border: 1px solid rgba(120,53,15,0.1); padding: 6px 20px; border-radius: 40px;
+    font-size: 0.8rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-mid); margin-bottom: 28px; animation: fadeUp 0.8s ease-out;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif; font-weight: 900;
+    font-size: clamp(3rem, 8vw, 5.8rem); line-height: 0.95; color: var(--text-dark);
+    text-shadow: 0 2px 24px rgba(254,243,199,0.5); margin-bottom: 24px;
+    animation: fadeUp 0.8s ease-out 0.15s both;
+  }
+  .hero h1 span {
+    display: block; font-size: 0.45em; font-family: 'DM Sans', sans-serif; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-mid); margin-top: 12px;
+  }
+  .hero p {
+    font-size: 1.15rem; line-height: 1.7; color: var(--text-mid); max-width: 520px;
+    margin: 0 auto 40px; animation: fadeUp 0.8s ease-out 0.3s both;
+  }
+  .hero-cta { display: inline-flex; gap: 16px; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.8s ease-out 0.45s both; }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px; padding: 16px 36px;
+    background: var(--text-dark); color: var(--beer-light); font-family: 'DM Sans', sans-serif;
+    font-size: 1rem; font-weight: 700; border: none; border-radius: 60px; cursor: pointer;
+    text-decoration: none; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(120,53,15,0.2);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(120,53,15,0.3); }
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 8px; padding: 16px 36px;
+    background: rgba(255,255,255,0.25); backdrop-filter: blur(8px); color: var(--text-dark);
+    font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600;
+    border: 2px solid rgba(120,53,15,0.15); border-radius: 60px; cursor: pointer;
+    text-decoration: none; transition: all 0.3s ease;
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.4); transform: translateY(-2px); }
+
+  /* ── FEATURES ── */
+  .features { padding: 50px 0; }
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .feature-card {
+    background: rgba(255,255,255,0.25); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.35); border-radius: 20px; padding: 36px 28px;
+    transition: all 0.35s ease; animation: fadeUp 0.6s ease-out both;
+  }
+  .feature-card:nth-child(1) { animation-delay: 0.6s; }
+  .feature-card:nth-child(2) { animation-delay: 0.75s; }
+  .feature-card:nth-child(3) { animation-delay: 0.9s; }
+  .feature-card:hover { background: rgba(255,255,255,0.4); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(245,158,11,0.1); }
+  .feature-icon { width: 52px; height: 52px; background: rgba(120,53,15,0.07); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 18px; }
+  .feature-card h3 { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--text-dark); margin-bottom: 10px; }
+  .feature-card p { font-size: 0.92rem; line-height: 1.6; color: var(--text-mid); }
+
+  /* ── SHOWCASE ── */
+  .showcase { padding: 70px 0; text-align: center; }
+  .showcase h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 900; color: var(--text-dark); margin-bottom: 12px; }
+  .showcase > p { font-size: 1.05rem; color: var(--text-mid); margin-bottom: 48px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  .label-samples { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .label-sample {
+    width: 170px; height: 230px; border-radius: 16px; position: relative; overflow: hidden;
+    cursor: pointer; transition: all 0.4s ease; border: 2px solid rgba(255,255,255,0.35);
+  }
+  .label-sample:hover { transform: translateY(-8px) rotate(-1deg); box-shadow: 0 16px 50px rgba(120,53,15,0.2); }
+  .label-sample:nth-child(1) { background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%); }
+  .label-sample:nth-child(2) { background: linear-gradient(135deg, #44403c 0%, #78716c 50%, #a8a29e 100%); }
+  .label-sample:nth-child(3) { background: linear-gradient(135deg, #14532d 0%, #166534 50%, #22863a 100%); }
+  .label-sample:nth-child(4) { background: linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #ea580c 100%); }
+  .label-inner {
+    position: absolute; inset: 14px; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 12px;
+  }
+  .label-inner .label-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; color: rgba(255,255,255,0.9); margin-bottom: 4px; }
+  .label-inner .label-type { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.5); }
+  .label-inner .label-detail { width: 36px; height: 1px; background: rgba(255,255,255,0.3); margin: 10px 0; }
+  .label-inner .label-vol { font-size: 0.72rem; color: rgba(255,255,255,0.6); font-weight: 500; }
+
+  /* ── PROCESS ── */
+  .process { padding: 60px 0 80px; }
+  .process h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 900; color: var(--text-dark); text-align: center; margin-bottom: 48px; }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .step { text-align: center; padding: 28px 16px; }
+  .step-number { width: 48px; height: 48px; border-radius: 50%; background: var(--text-dark); color: var(--beer-light); font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .step h4 { font-weight: 700; font-size: 1rem; color: var(--text-dark); margin-bottom: 8px; }
+  .step p { font-size: 0.85rem; color: var(--text-mid); line-height: 1.5; }
+
+  /* ── PRICING ── */
+  .pricing { padding: 40px 0 80px; text-align: center; }
+  .pricing h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4.5vw, 3.2rem); font-weight: 900; color: var(--text-dark); margin-bottom: 12px; }
+  .pricing > p { color: var(--text-mid); margin-bottom: 40px; font-size: 1.05rem; }
+  .pricing-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 820px; margin: 0 auto; }
+  .pricing-card { background: rgba(255,255,255,0.25); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.35); border-radius: 20px; padding: 36px 24px; transition: all 0.35s ease; }
+  .pricing-card.featured { background: rgba(120,53,15,0.85); color: var(--foam-white); border-color: rgba(253,230,138,0.3); transform: scale(1.04); box-shadow: 0 12px 50px rgba(120,53,15,0.25); }
+  .pricing-card:hover { transform: translateY(-4px); }
+  .pricing-card.featured:hover { transform: scale(1.04) translateY(-4px); }
+  .pricing-tier { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; color: var(--text-mid); }
+  .pricing-card.featured .pricing-tier { color: var(--beer-mid); }
+  .pricing-amount { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 900; margin-bottom: 4px; }
+  .pricing-unit { font-size: 0.85rem; color: var(--text-mid); margin-bottom: 20px; }
+  .pricing-card.featured .pricing-unit { color: rgba(255,255,255,0.6); }
+  .pricing-features { list-style: none; text-align: left; padding: 0; margin-bottom: 28px; }
+  .pricing-features li { padding: 6px 0; font-size: 0.88rem; position: relative; padding-left: 22px; }
+  .pricing-features li::before { content: '✓'; position: absolute; left: 0; font-weight: 700; color: var(--beer-dark); }
+  .pricing-card.featured .pricing-features li::before { color: var(--beer-mid); }
+  .pricing-card .btn-primary { width: 100%; justify-content: center; padding: 14px 24px; font-size: 0.9rem; }
+  .pricing-card.featured .btn-primary { background: var(--beer-mid); color: var(--text-dark); }
+  .pricing-card:not(.featured) .btn-primary { background: transparent; border: 2px solid var(--text-dark); color: var(--text-dark); box-shadow: none; }
+
+  /* ── CTA ── */
+  .cta-section { padding: 80px 0 120px; text-align: center; }
+  .cta-box { background: rgba(255,255,255,0.18); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.3); border-radius: 28px; padding: 60px 40px; }
+  .cta-box h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; color: var(--text-dark); margin-bottom: 16px; }
+  .cta-box p { color: var(--text-mid); font-size: 1.05rem; margin-bottom: 32px; max-width: 450px; margin-left: auto; margin-right: auto; }
+
+  footer { position: relative; z-index: 10; text-align: center; padding: 40px 24px; font-size: 0.8rem; color: rgba(120,53,15,0.4); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 768px) {
+    .features-grid { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: repeat(2, 1fr); }
+    .pricing-cards { grid-template-columns: 1fr; max-width: 340px; }
+    .pricing-card.featured { transform: none; }
+    .label-samples { gap: 12px; }
+    .label-sample { width: 140px; height: 190px; }
+  }
+</style>
+</head>
+<body>
+<div class="foam-wrap"><canvas class="foam-canvas" id="foamCanvas"></canvas></div>
+
+
+<div class="glass-edge-left"></div>
+<div class="glass-edge-right"></div>
+<div class="condensation"></div>
+<div class="beer-glow"></div>
+<div class="bubbles-container" id="bubbles"></div>
+
+<div class="content">
+  <section class="hero">
+    <div class="hero-badge">Bierlabels op Maat — Geef je Brouwsel een Gezicht</div>
+    <h1>BrewTag<span>Labels zo uniek als jouw bier</span></h1>
+    <p>Professionele labels voor craft brouwerijen, hobbybrouwers en biermerken. Upload je ontwerp of maak er een — drukklaar geleverd.</p>
+    <div class="hero-cta">
+      <a href="#pricing" class="btn-primary">Start je Bestelling →</a>
+      <a href="#showcase" class="btn-ghost">Bekijk Voorbeelden</a>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <h3>Ontwerpstudio</h3>
+        <p>Upload je artwork of gebruik onze templates. Full bleed, stansvormen en speciale vormen mogelijk.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏷️</div>
+        <h3>Premium Materialen</h3>
+        <p>Waterbestendig vinyl, getextureerd papier, metallic folie en kraft. Bestand tegen de ijsemmer.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <h3>Elke Oplage</h3>
+        <p>Van 50 labels voor een thuisbrouwsel tot 500.000 voor productieruns. Geen minimum te klein.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="showcase" id="showcase">
+    <h2>Voor Elke Stijl</h2>
+    <p>Van hazy IPA's tot imperial stouts — jouw label vertelt je verhaal vóór de eerste slok.</p>
+    <div class="label-samples">
+      <div class="label-sample"><div class="label-inner"><div class="label-name">Middernacht</div><div class="label-type">Imperial Stout</div><div class="label-detail"></div><div class="label-vol">11.5% ABV</div></div></div>
+      <div class="label-sample"><div class="label-inner"><div class="label-name">Kopergloed</div><div class="label-type">Amber Ale</div><div class="label-detail"></div><div class="label-vol">5.8% ABV</div></div></div>
+      <div class="label-sample"><div class="label-inner"><div class="label-name">Bosgrond</div><div class="label-type">Farmhouse Saison</div><div class="label-detail"></div><div class="label-vol">6.2% ABV</div></div></div>
+      <div class="label-sample"><div class="label-inner"><div class="label-name">Vonk</div><div class="label-type">Barrel-Aged Red</div><div class="label-detail"></div><div class="label-vol">9.0% ABV</div></div></div>
+    </div>
+  </section>
+
+  <section class="process">
+    <h2>Zo Werkt Het</h2>
+    <div class="steps">
+      <div class="step"><div class="step-number">1</div><h4>Upload of Ontwerp</h4><p>Lever je eigen artwork aan of bouw met onze bierlabel templates.</p></div>
+      <div class="step"><div class="step-number">2</div><h4>Kies Materiaal</h4><p>Selecteer papiersoort, afwerking en speciale bewerkingen zoals folie of reliëf.</p></div>
+      <div class="step"><div class="step-number">3</div><h4>Proof & Akkoord</h4><p>Wij sturen een digitale proof. Goedkeuren of revisie aanvragen — gratis.</p></div>
+      <div class="step"><div class="step-number">4</div><h4>Drukken & Verzenden</h4><p>Productie in 3–5 werkdagen. Bezorgd aan de deur of bij je brouwerij.</p></div>
+    </div>
+  </section>
+
+  <section class="pricing" id="pricing">
+    <h2>Heldere Prijzen</h2>
+    <p>Transparante offertes, geen verborgen kosten. Volumekorting inbegrepen.</p>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <div class="pricing-tier">Starter</div>
+        <div class="pricing-amount">€0,38</div>
+        <div class="pricing-unit">per label · 50–500 stuks</div>
+        <ul class="pricing-features">
+          <li>Waterbestendig vinyl</li>
+          <li>Full colour druk</li>
+          <li>1 ontwerpwijziging</li>
+          <li>5 werkdagen levertijd</li>
+        </ul>
+        <button class="btn-primary">Aan de Slag</button>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-tier">Craft Pro</div>
+        <div class="pricing-amount">€0,18</div>
+        <div class="pricing-unit">per label · 500–10K stuks</div>
+        <ul class="pricing-features">
+          <li>Premium papiersoorten</li>
+          <li>Folie & reliëf mogelijk</li>
+          <li>Onbeperkt revisies</li>
+          <li>3 werkdagen levertijd</li>
+        </ul>
+        <button class="btn-primary">Aan de Slag</button>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-tier">Productie</div>
+        <div class="pricing-amount">€0,06</div>
+        <div class="pricing-unit">per label · 10K+ stuks</div>
+        <ul class="pricing-features">
+          <li>Alle materialen & afwerkingen</li>
+          <li>Vaste contactpersoon</li>
+          <li>Variabele data printing</li>
+          <li>Prioriteitsproductie</li>
+        </ul>
+        <button class="btn-primary">Neem Contact Op</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <div class="cta-box">
+      <h2>Klaar om je Brouwsel te Labelen?</h2>
+      <p>Ontvang een offerte op maat in minder dan 2 minuten. Vrijblijvend, zonder poespas.</p>
+      <a href="#" class="btn-primary">Start je Bestelling →</a>
+    </div>
+  </section>
+</div>
+
+<footer>© 2026 BrewTag · Bierlabels op Maat · Met zorg gebrouwen</footer>
+
+<script>
+      // ── INTERACTIVE FOAM: mouse-reactive cell structure ──
+  const foamCanvas = document.getElementById('foamCanvas');
+  const fctx = foamCanvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const FOAM_H = 180;
+  const CANVAS_H = FOAM_H + 80;
+  let foamW = 0;
+  let foamCells = [];
+  let foamDrips = [];
+  let foamMouseX = -9999, foamMouseY = -9999;
+  const FOAM_REPEL = 140;
+  const FOAM_FORCE = 5;
+
+  // Shared mouse tracking (foam canvas is at top of page)
+  document.addEventListener('mousemove', e => {
+    foamMouseX = e.clientX;
+    foamMouseY = e.clientY + window.scrollY; // account for scroll since foam is absolute
+  });
+  document.addEventListener('mouseleave', () => { foamMouseX = -9999; foamMouseY = -9999; });
+  document.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    foamMouseX = t.clientX;
+    foamMouseY = t.clientY + window.scrollY;
+  }, { passive: true });
+  document.addEventListener('touchend', () => { foamMouseX = -9999; foamMouseY = -9999; });
+  window.addEventListener('scroll', () => {
+    // Update foam mouse Y on scroll
+    foamMouseY = foamMouseY; // stays in page coords
+  });
+
+  function initFoamCells() {
+    const W = window.innerWidth;
+    foamW = W;
+    foamCells = [];
+    foamDrips = [];
+
+    function addZone(yMin, yMax, rMin, rMax, density) {
+      const area = W * (yMax - yMin);
+      const avgR = (rMin + rMax) / 2;
+      const count = Math.floor(area * density / (avgR * avgR));
+      for (let i = 0; i < count; i++) {
+        const r = rMin + Math.random() * (rMax - rMin);
+        const hx = Math.random() * (W + 20) - 10;
+        const hy = yMin + Math.random() * (yMax - yMin);
+        foamCells.push({
+          hx, hy, r,                // home position
+          x: hx, y: hy,            // current position
+          vx: 0, vy: 0,            // velocity
+          warmth: Math.random() * 12,
+          brightness: 248 + Math.random() * 7,
+          hlChance: Math.random(),  // pre-rolled highlight
+          hlAlpha: 0.4 + Math.random() * 0.5,
+        });
+      }
+    }
+
+    addZone(0, 55, 1, 2.5, 0.35);
+    addZone(40, 100, 2, 4, 0.2);
+    addZone(85, 140, 3, 6, 0.12);
+    addZone(125, 175, 4, 9, 0.06);
+    addZone(165, FOAM_H + 10, 3, 7, 0.025);
+    foamCells.sort((a, b) => a.r - b.r);
+
+    // Drips
+    const dripCount = 6 + Math.floor(Math.random() * 5);
+    for (let d = 0; d < dripCount; d++) {
+      const dx = Math.random() * W;
+      const startY = FOAM_H - 25 + Math.random() * 15;
+      const dripLen = 20 + Math.random() * 50;
+      const width = 6 + Math.random() * 12;
+      const nBubbles = 5 + Math.floor(Math.random() * 10);
+      for (let i = 0; i < nBubbles; i++) {
+        const t = i / nBubbles;
+        const r = (1 - t * 0.7) * (1.5 + Math.random() * 3);
+        const hx = dx + (Math.random() - 0.5) * width * (1 - t * 0.5);
+        const hy = startY + t * dripLen;
+        if (r < 0.5) continue;
+        foamDrips.push({
+          hx, hy, r,
+          x: hx, y: hy,
+          vx: 0, vy: 0,
+          alpha: 0.6 - t * 0.4
+        });
+      }
+    }
+  }
+
+  function setupFoamCanvas() {
+    const W = window.innerWidth;
+    foamCanvas.width = W * dpr;
+    foamCanvas.height = CANVAS_H * dpr;
+    foamCanvas.style.width = W + 'px';
+    foamCanvas.style.height = CANVAS_H + 'px';
+  }
+
+  function renderFoam() {
+    const W = foamW;
+    fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fctx.clearRect(0, 0, W, CANVAS_H);
+
+    // Background: cream → gold
+    const beerGrad = fctx.createLinearGradient(0, 0, 0, CANVAS_H);
+    beerGrad.addColorStop(0, '#fffef0');
+    beerGrad.addColorStop(0.25, '#fffce8');
+    beerGrad.addColorStop(0.55, '#faf0c0');
+    beerGrad.addColorStop(0.75, '#f2cc44');
+    beerGrad.addColorStop(0.9, '#e6b41a');
+    beerGrad.addColorStop(1, '#d4a012');
+    fctx.fillStyle = beerGrad;
+    fctx.fillRect(0, 0, W, CANVAS_H);
+
+    // Dense cream top
+    const topGrad = fctx.createLinearGradient(0, 0, 0, 55);
+    topGrad.addColorStop(0, '#fffef0');
+    topGrad.addColorStop(0.5, 'rgba(255,254,240,0.95)');
+    topGrad.addColorStop(1, 'rgba(255,254,240,0)');
+    fctx.fillStyle = topGrad;
+    fctx.fillRect(0, 0, W, 55);
+
+    // Physics: repel from mouse, spring back to home
+    const mx = foamMouseX;
+    const my = foamMouseY;
+
+    for (const c of foamCells) {
+      // Mouse repulsion
+      const dx = c.x - mx;
+      const dy = c.y - my;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < FOAM_REPEL && dist > 0) {
+        const force = (1 - dist / FOAM_REPEL) * FOAM_FORCE * (c.r / 5);
+        c.vx += (dx / dist) * force;
+        c.vy += (dy / dist) * force;
+      }
+      // Spring back to home
+      c.vx += (c.hx - c.x) * 0.06;
+      c.vy += (c.hy - c.y) * 0.06;
+      // Damping
+      c.vx *= 0.82;
+      c.vy *= 0.82;
+      // Move
+      c.x += c.vx;
+      c.y += c.vy;
+    }
+
+    for (const d of foamDrips) {
+      const dx = d.x - mx;
+      const dy = d.y - my;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < FOAM_REPEL && dist > 0) {
+        const force = (1 - dist / FOAM_REPEL) * FOAM_FORCE * (d.r / 4);
+        d.vx += (dx / dist) * force;
+        d.vy += (dy / dist) * force;
+      }
+      d.vx += (d.hx - d.x) * 0.05;
+      d.vy += (d.hy - d.y) * 0.05;
+      d.vx *= 0.8;
+      d.vy *= 0.8;
+      d.x += d.vx;
+      d.y += d.vy;
+    }
+
+    // Draw cells
+    for (const c of foamCells) {
+      const depth = c.hy / FOAM_H;
+      const alpha = depth < 0.3 ? 0.95 :
+                    depth < 0.7 ? 0.9 - (depth - 0.3) * 0.4 :
+                    0.7 - (depth - 0.7) * 1.5;
+      if (alpha <= 0) continue;
+
+      const {x, y, r, warmth, brightness} = c;
+
+      // Small cells: flat fill for performance
+      if (r < 3) {
+        fctx.beginPath();
+        fctx.arc(x, y, r, 0, Math.PI * 2);
+        fctx.fillStyle = `rgba(${brightness},${brightness - warmth},${brightness - warmth*2},${alpha})`;
+        fctx.fill();
+      } else {
+        // Larger cells: radial gradient
+        const cGrad = fctx.createRadialGradient(x - r*0.2, y - r*0.2, r*0.1, x, y, r);
+        cGrad.addColorStop(0, `rgba(${brightness},${brightness - warmth},${brightness - warmth*2},${Math.min(alpha+0.1,1)})`);
+        cGrad.addColorStop(0.7, `rgba(${brightness-5},${brightness-8-warmth},${brightness-15-warmth},${alpha})`);
+        cGrad.addColorStop(1, `rgba(${brightness-15},${brightness-20},${brightness-30},${alpha*0.7})`);
+        fctx.beginPath();
+        fctx.arc(x, y, r, 0, Math.PI * 2);
+        fctx.fillStyle = cGrad;
+        fctx.fill();
+      }
+
+      // Cell wall
+      const wallAlpha = depth < 0.3 ? 0.1 : depth < 0.7 ? 0.15 : 0.22;
+      fctx.beginPath();
+      fctx.arc(x, y, r, 0, Math.PI * 2);
+      fctx.strokeStyle = `rgba(180,170,140,${wallAlpha})`;
+      fctx.lineWidth = r < 3 ? 0.3 : 0.5;
+      fctx.stroke();
+
+      // Highlight on bigger cells
+      if (r > 3 && c.hlChance > 0.3) {
+        const hlR = r * 0.3;
+        const hlGrad = fctx.createRadialGradient(x-r*0.3, y-r*0.35, 0, x-r*0.3, y-r*0.35, hlR);
+        hlGrad.addColorStop(0, `rgba(255,255,255,${c.hlAlpha})`);
+        hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        fctx.beginPath();
+        fctx.arc(x-r*0.3, y-r*0.35, hlR, 0, Math.PI * 2);
+        fctx.fillStyle = hlGrad;
+        fctx.fill();
+      }
+    }
+
+    // Draw drips
+    for (const d of foamDrips) {
+      if (d.alpha <= 0) continue;
+      const {x, y, r, alpha} = d;
+      if (r > 2) {
+        const dGrad = fctx.createRadialGradient(x-r*0.2, y-r*0.2, r*0.1, x, y, r);
+        dGrad.addColorStop(0, `rgba(255,253,242,${alpha+0.1})`);
+        dGrad.addColorStop(1, `rgba(248,244,230,${alpha*0.6})`);
+        fctx.beginPath();
+        fctx.arc(x, y, r, 0, Math.PI * 2);
+        fctx.fillStyle = dGrad;
+        fctx.fill();
+      } else {
+        fctx.beginPath();
+        fctx.arc(x, y, r, 0, Math.PI * 2);
+        fctx.fillStyle = `rgba(255,253,242,${alpha})`;
+        fctx.fill();
+      }
+      fctx.beginPath();
+      fctx.arc(x, y, r, 0, Math.PI * 2);
+      fctx.strokeStyle = `rgba(180,170,140,${alpha*0.3})`;
+      fctx.lineWidth = 0.3;
+      fctx.stroke();
+    }
+  }
+
+  // Init
+  setupFoamCanvas();
+  initFoamCells();
+
+  // Resize handler
+  window.addEventListener('resize', () => {
+    setupFoamCanvas();
+    initFoamCells();
+  });
+
+  // Animation loop (shared with beer bubbles below)
+  function animateFoam() {
+    renderFoam();
+    requestAnimationFrame(animateFoam);
+  }
+  animateFoam();
+
+
+
+  // ── BUBBLES ──
+  const bc = document.getElementById('bubbles');
+  const W = () => window.innerWidth;
+  const H = () => window.innerHeight;
+  let mouseX = -9999, mouseY = -9999;
+  const REPEL_RADIUS = 120;
+  const REPEL_FORCE = 3.5;
+
+  document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+  document.addEventListener('mouseleave', () => { mouseX = -9999; mouseY = -9999; });
+  // Touch support
+  document.addEventListener('touchmove', e => {
+    const t = e.touches[0]; mouseX = t.clientX; mouseY = t.clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', () => { mouseX = -9999; mouseY = -9999; });
+
+  class Bubble {
+    constructor() {
+      this.el = document.createElement('div');
+      this.el.className = 'bubble';
+      this.reset(true);
+      bc.appendChild(this.el);
+    }
+    reset(initial) {
+      // Random sizes: mostly small, some big (like real beer)
+      const r = Math.random();
+      if (r < 0.45) this.size = Math.random() * 4 + 2;       // tiny 2-6px
+      else if (r < 0.8) this.size = Math.random() * 6 + 6;   // medium 6-12px
+      else if (r < 0.95) this.size = Math.random() * 8 + 12;  // large 12-20px
+      else this.size = Math.random() * 6 + 20;                // extra 20-26px
+
+      this.el.style.width = this.size + 'px';
+      this.el.style.height = this.size + 'px';
+      // Smaller bubbles: thinner border, less shadow
+      if (this.size < 6) {
+        this.el.style.border = '0.5px solid rgba(255,255,255,0.4)';
+        this.el.style.boxShadow = 'none';
+      } else {
+        this.el.style.border = '1px solid rgba(255,255,255,0.6)';
+        this.el.style.boxShadow = 'inset 0 -1px 3px rgba(255,255,255,0.15), 0 0 4px rgba(255,255,255,0.2)';
+      }
+
+      this.x = Math.random() * W() * 0.8 + W() * 0.1;
+      this.y = initial ? Math.random() * H() : H() + 20;
+      this.baseX = this.x;
+      this.vx = 0;
+      this.vy = 0;
+      this.speed = (0.3 + Math.random() * 0.8) * (1 - this.size / 40 + 0.4); // smaller = slower
+      this.wobbleAmp = Math.random() * 20 + 5;
+      this.wobbleSpeed = Math.random() * 0.02 + 0.005;
+      this.wobbleOffset = Math.random() * Math.PI * 2;
+      this.opacity = 0.5 + Math.random() * 0.5;
+      this.el.style.opacity = initial ? this.opacity : 0;
+      this.age = initial ? Math.random() * 1000 : 0;
+      this.fadeIn = !initial;
+    }
+    update() {
+      this.age++;
+
+      // Fade in
+      if (this.fadeIn && this.age < 30) {
+        this.el.style.opacity = (this.age / 30) * this.opacity;
+      } else if (this.fadeIn && this.age === 30) {
+        this.el.style.opacity = this.opacity;
+        this.fadeIn = false;
+      }
+
+      // Rise
+      this.y -= this.speed;
+
+      // Wobble
+      const wobble = Math.sin(this.age * this.wobbleSpeed + this.wobbleOffset) * this.wobbleAmp;
+      let targetX = this.baseX + wobble;
+
+      // Mouse repulsion
+      const dx = this.x - mouseX;
+      const dy = this.y - mouseY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < REPEL_RADIUS && dist > 0) {
+        const force = (1 - dist / REPEL_RADIUS) * REPEL_FORCE;
+        this.vx += (dx / dist) * force;
+        this.vy += (dy / dist) * force * 0.5; // less vertical push
+      }
+
+      // Apply velocity with damping
+      this.vx *= 0.92;
+      this.vy *= 0.92;
+      this.x += this.vx;
+      this.y += this.vy;
+
+      // Drift back to wobble path
+      this.x += (targetX - this.x) * 0.02;
+
+      // Fade out near top
+      if (this.y < 100) {
+        this.el.style.opacity = Math.max(0, (this.y / 100) * this.opacity);
+      }
+
+      // Reset if off screen
+      if (this.y < -30) {
+        this.reset(false);
+        return;
+      }
+
+      this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
+    }
+  }
+
+  // Create bubbles
+  const bubbles = [];
+  const BUBBLE_COUNT = 70;
+  for (let i = 0; i < BUBBLE_COUNT; i++) {
+    bubbles.push(new Bubble());
+  }
+
+  // Animation loop
+  function animate() {
+    for (const b of bubbles) b.update();
+    requestAnimationFrame(animate);
+  }
+  animate();
+</script>
+</body>
+</html>

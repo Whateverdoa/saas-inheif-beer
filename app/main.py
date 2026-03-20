@@ -3,7 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import webhooks, auth, admin, legal, invoices, compliance, orders, organizations, ogos_config, credits, beer
+from app.routers import webhooks, auth, admin, legal, invoices, compliance, orders, organizations, ogos_config, credits, beer, kvk
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -46,3 +46,4 @@ app.include_router(organizations.router)
 app.include_router(ogos_config.router)
 app.include_router(credits.router)
 app.include_router(beer.router)
+app.include_router(kvk.router)

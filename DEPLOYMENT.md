@@ -2,8 +2,8 @@
 
 This project is deployed as **two Vercel projects**:
 
-- **Backend (FastAPI)** from repository root: `webhooks-skeleton`
-- **Frontend (Next.js)** from subdirectory: `webhooks-skeleton/frontend`
+- **Backend (FastAPI)** from repository root
+- **Frontend (Next.js)** from subdirectory `frontend/`
 
 ## Live URLs
 
@@ -30,14 +30,14 @@ This project is deployed as **two Vercel projects**:
 ### Backend deploy
 
 ```bash
-cd webhooks-skeleton
+# From repository root (where vercel.json and api/ live)
 npx vercel --prod --scope inheif
 ```
 
 ### Frontend deploy
 
 ```bash
-cd webhooks-skeleton/frontend
+cd frontend
 npx vercel --prod --scope inheif
 ```
 
@@ -105,7 +105,7 @@ Then open:
 ### Backend
 
 ```bash
-cd webhooks-skeleton
+# From repository root
 source .venv/bin/activate
 uv pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
@@ -114,7 +114,7 @@ uvicorn app.main:app --reload --port 8000
 ### Frontend
 
 ```bash
-cd webhooks-skeleton/frontend
+cd frontend
 npm install
 cp .env.local.example .env.local
 npm run dev
@@ -138,10 +138,15 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 - Check runtime logs:
 
 ```bash
-cd webhooks-skeleton
+# From repository root
 npx vercel logs --scope inheif
 ```
 
 ### CORS issues
 
 - Ensure frontend domain is included in backend CORS allow list in `app/main.py`.
+
+### Frontend shows "Failed to fetch" or "Cannot reach the API"
+
+- **Vercel:** In the **frontend** project, set `NEXT_PUBLIC_API_URL=https://saas-inheif-beer.vercel.app` in **Settings → Environment Variables** (all environments). Redeploy the frontend so the variable is inlined at build time.
+- **Local:** In `frontend/.env.local` set `NEXT_PUBLIC_API_URL=http://localhost:8000` and ensure the backend is running.
