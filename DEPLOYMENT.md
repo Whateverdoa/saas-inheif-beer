@@ -9,10 +9,36 @@ This GitHub repo connects to **two separate Vercel projects** (same team, e.g. `
 
 Each project has its **own** Vercel dashboard, env vars, and deployments. Pushes to `main` can trigger **both** if both are linked to the same repo with the correct root directories.
 
+## Automatic deploys (push / PR)
+
+With **Git connected** on each Vercel project, you do **not** need a custom GitHub Action for normal flows:
+
+| Git event | What happens |
+|-----------|----------------|
+| **Push to a branch** (e.g. PR branch) | **Preview deployment** — unique URL per branch/commit (PR comments if the Vercel GitHub app is installed on the org/repo). |
+| **Merge to the Production branch** (usually `main`) | **Production deployment** for that project. |
+
+The **`frontend`** and **`saas-inheif-beer`** projects each run their own build from the **same commit**; configure **Root Directory** separately (`frontend/` vs `.`).
+
+**If Production looks stale:** compare the deployment’s **git SHA** to GitHub `main`. Failed builds leave the last green Production deploy in place — fix the build, then merge or push again. Prefer redeploying from the **latest** commit, not an old successful one.
+
+**Checklist (both projects):** **Settings → Git** → correct repo, **Production Branch** = `main`; **Ignored Build Step** only if you really mean to skip.
+
 ## Live URLs
 
 - **Backend (project `saas-inheif-beer`):** `https://saas-inheif-beer.vercel.app`
 - **Frontend (project `frontend`):** `https://frontend-inheif.vercel.app`
+
+## Frontend locales (NL / DE / FR / EN)
+
+All app routes live under a **locale prefix**: `/{nl|de|fr|en}/…`. Visiting `/` redirects to the best match from the `NEXT_LOCALE` cookie (if set), then `Accept-Language`, otherwise **`nl`**.
+
+Examples:
+
+- `https://frontend-inheif.vercel.app/nl/beer/order`
+- `https://frontend-inheif.vercel.app/en/beer`
+
+The **language switcher** (top-right on BrewTag pages) updates the URL and sets the `NEXT_LOCALE` cookie for later visits.
 
 ## Current Architecture
 
