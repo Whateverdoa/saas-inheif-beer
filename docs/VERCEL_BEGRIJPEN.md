@@ -23,12 +23,9 @@ Dan: **push / PR** → Vercel maakt zelf **Previews**; **merge naar `main`** →
 
 Geen secrets in GitHub nodig.
 
-## Optioneel: GitHub Action
+## GitHub Action (in deze repo)
 
-Alleen als je deploy **via Actions** wilt: repo-variable **`VERCEL_ACTIONS_DEPLOY=true`** + secrets.  
-De workflow deployt vanuit **`frontend/`** met `vercel deploy .` (niet `vercel deploy frontend`), anders zoekt Vercel naar `frontend/frontend` en faalt de build.
-
-Wil je het **simpel** houden: zet **`VERCEL_ACTIONS_DEPLOY` uit** (variable verwijderen of niet `true`) en gebruik alleen Vercel Git hierboven.
+Workflow **Deploy frontend**: draait op **elke PR** (zelfde repo) en **elke push naar `main`**. Vereist de drie **repository secrets** (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_FRONTEND`). Deploy: `frontend/` + `vercel deploy .`.
 
 ## Snel troubleshooten
 

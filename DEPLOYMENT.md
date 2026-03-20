@@ -46,7 +46,6 @@ Als previews/productie niet automatisch lopen, kun je **[`.github/workflows/verc
 
 | GitHub → Actions | Waarde |
 |------------------|--------|
-| **Variable** | `VERCEL_ACTIONS_DEPLOY` = `true` (opt-in, anders wordt die job overgeslagen) |
 | **Secret** | `VERCEL_TOKEN` — [Vercel account tokens](https://vercel.com/account/tokens) |
 | **Secret** | `VERCEL_ORG_ID` — team-id (`team_…`, Vercel team settings) |
 | **Secret** | `VERCEL_PROJECT_ID_FRONTEND` — project-id (`prj_…`) van het Vercel-project **`frontend`** |
@@ -56,7 +55,7 @@ Als previews/productie niet automatisch lopen, kun je **[`.github/workflows/verc
 
 De workflow zet `VERCEL_ORG_ID` en `VERCEL_PROJECT_ID` (GitHub-secret **`VERCEL_PROJECT_ID_FRONTEND`**) zoals de Vercel CLI verwacht.
 
-**Dubbele builds:** als zowel Vercel Git **als** deze Action actief zijn, bouwt Vercel twee keer — kies één primaire route of laat `VERCEL_ACTIONS_DEPLOY` uit.
+**Dubbele builds:** Vercel Git **en** deze Action tegelijk → twee builds. Kies één route of disconnect Git deploy voor `frontend`.
 
 ## Automatic deploys (push / PR)
 
