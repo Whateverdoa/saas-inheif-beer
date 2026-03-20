@@ -32,8 +32,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Deploy path = ./frontend so CLI root matches dashboard "Root Directory" (no root vercel.json mix-up).
+      # Project dashboard has Root Directory = "frontend". Do NOT run `vercel deploy frontend`
+      # from repo root — Vercel resolves that to …/frontend/frontend (missing). Use cwd + deploy .
       - name: Deploy to Vercel
+        working-directory: frontend
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -41,7 +43,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            npx --yes vercel@latest deploy frontend --token="$VERCEL_TOKEN" --yes --prod
+            npx --yes vercel@latest deploy . --token="$VERCEL_TOKEN" --yes --prod
           else
-            npx --yes vercel@latest deploy frontend --token="$VERCEL_TOKEN" --yes
+            npx --yes vercel@latest deploy . --token="$VERCEL_TOKEN" --yes
           fi

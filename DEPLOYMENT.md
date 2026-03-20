@@ -1,5 +1,7 @@
 # Deployment Guide (Final)
 
+**Nieuw hier?** Lees eerst **[docs/VERCEL_BEGRIJPEN.md](./docs/VERCEL_BEGRIJPEN.md)** (API vs site, zonder Action).
+
 This GitHub repo connects to **two separate Vercel projects** (same team, e.g. `inheif`):
 
 | Vercel project name | What it is | Root Directory in Vercel | Production URL (typical) |
