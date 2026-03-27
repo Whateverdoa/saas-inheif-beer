@@ -7,16 +7,20 @@ import type { Locale } from "@/lib/i18n/config"
 
 /**
  * BrewTag-inspired shell: golden beer gradient, glass highlights, condensation specks.
+ * `variant="calm"` omits foam/bubbles for a lighter first screen (e.g. simplified home).
  */
 export function BrewTagShell({
   children,
   locale,
   languageNavLabel,
+  variant = "full",
 }: {
   children: ReactNode
   locale: Locale
   languageNavLabel: string
+  variant?: "full" | "calm"
 }) {
+  const calm = variant === "calm"
   return (
     <div className="font-brew-sans min-h-screen text-[#4a2800] relative">
       <div className="fixed top-4 right-4 z-[100] flex justify-end">
@@ -59,13 +63,13 @@ export function BrewTagShell({
             "radial-gradient(2px 3px at 14% 25%, rgba(255,245,200,0.4), transparent), radial-gradient(3px 4px at 33% 48%, rgba(255,240,190,0.3), transparent), radial-gradient(2px 3px at 55% 20%, rgba(255,242,195,0.35), transparent), radial-gradient(3px 3px at 75% 40%, rgba(255,238,185,0.25), transparent)",
         }}
       />
-      <BeerBubbles />
-      <BeerFoamCollar />
+      {!calm && <BeerBubbles />}
+      {!calm && <BeerFoamCollar />}
       {/* overflow-x alleen op content: voorkomt dat fixed bubbles worden weggeknipt */}
       <div
         className="relative z-10 overflow-x-hidden"
         style={{
-          paddingTop: `max(5rem, ${Math.round(BEER_FOAM_COLLAR_HEIGHT_PX * 0.72)}px)`,
+          paddingTop: calm ? "5.5rem" : `max(5rem, ${Math.round(BEER_FOAM_COLLAR_HEIGHT_PX * 0.72)}px)`,
         }}
       >
         {children}

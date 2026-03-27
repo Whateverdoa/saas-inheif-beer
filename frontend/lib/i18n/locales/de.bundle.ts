@@ -4,69 +4,17 @@ export const deMessages: AppMessages = {
   meta: {
     title: "VILA-BIER VRIJMIBO | Bieretiketten · Vila-etiketten",
     description:
-      "In einem Rutsch bestellen: Standardformate aus dem ersten Aufschlag. Aktion: 5 ct pro Etikett.",
+      "Bieretiketten-PDFs hochladen (Vorder-/Rückseite/Hals), Standardformat wählen, Angebot anfordern.",
   },
   nav: { language: "Sprache" },
   home: {
-    badge: "Ein Bestellvorgang · Standardformate",
+    badge: "Bieretiketten · druckfertige PDFs",
     titleLine1: "VILA-BIER",
     titleLine2: "VRIJMIBO",
     intro:
-      "Direkt bestellen: Standardformat aus dem ersten Aufschlag wählen, Daten eingeben, absenden. " +
-      "Druckfertig, wasserfeste Optionen — Einführungsangebot 5 ct pro Etikett.",
-    ctaOrder: "Jetzt in einem Schritt bestellen →",
-    ctaExamples: "Beispiele ansehen",
-    features: [
-      {
-        icon: "🎨",
-        title: "Druckfertig",
-        text: "Artwork hochladen oder Standardmaße nutzen. Beschnitt und CMYK.",
-      },
-      {
-        icon: "🏷️",
-        title: "Premium-Materialien",
-        text: "Vinyl, Papier, Kraft — für Kühlkette und Eiswürfel.",
-      },
-      {
-        icon: "📦",
-        title: "Flexible Stückzahlen",
-        text: "Von Kleinserie bis Großauftrag. Klare Preisstufen.",
-      },
-    ],
-    showcaseTitle: "Für jeden Stil",
-    showcaseSubtitle:
-      "Von Hazy IPA bis Imperial Stout — Ihr Etikett erzählt die Geschichte vor dem ersten Schluck.",
-    labels: [
-      { name: "Midnight", type: "Imperial Stout", abv: "11,5% vol" },
-      { name: "Copperline", type: "Amber Ale", abv: "5,8% vol" },
-      { name: "Forest Floor", type: "Farmhouse Saison", abv: "6,2% vol" },
-      { name: "Ember", type: "Barrel-Aged Red", abv: "9,0% vol" },
-    ],
-    howTitle: "Ablauf",
-    steps: [
-      {
-        n: "1",
-        title: "Standardformat",
-        desc: "Preset aus dem ersten Aufschlag wählen — Maße werden automatisch gesetzt.",
-      },
-      { n: "2", title: "Upload", desc: "PDF oder Notizen senden — wir prüfen die Spezifikation." },
-      { n: "3", title: "Korrektur", desc: "Digitale Ansicht zu Freigabe oder Revision." },
-      { n: "4", title: "Druck & Versand", desc: "Produktion und Lieferung zur Brauerei oder ins Lager." },
-    ],
-    pricingTitle: "Einfache Preise",
-    pricingSubtitle: "Einführung: 5 Cent pro Etikett — Bestellung mit Standardformaten in einem Flow.",
-    tiers: [
-      {
-        tier: "Aktion",
-        price: "5 ct",
-        unit: "pro Etikett — Einführungsangebot",
-        feat: ["NL-Standardformate", "Ein Flow bis zur Anfrage", "Solange die Aktion läuft"],
-        cta: "Zur Bestellung",
-        featured: true,
-      },
-    ],
-    finalTitle: "Etikett bereit?",
-    finalSubtitle: "Unter 2 Minuten — Standardformat, ein Flow.",
+      "Laden Sie Ihre Etiketten-PDFs hoch (Vorderseite Pflicht; Rückseite, Hals, optional), wählen Sie ein Standardformat und fordern Sie ein Angebot an — kurzer Weg vom Artwork zur Bestellung.",
+    ctaPrimary: "Etiketten hochladen & bestellen →",
+    ctaSecondary: "EU-Compliance-Text",
     footer:
       "VILA-BIER VRIJMIBO · Bieretiketten · Ermöglicht durch OGOS ---Vila-etiketten",
   },
@@ -76,6 +24,18 @@ export const deMessages: AppMessages = {
     subtitle:
       "In einem Durchgang: Standardformat aus dem ersten Aufschlag wählen, Daten eintragen, Angebot anfordern.",
     promoLine: "Aktion: 5 ct pro Etikett — Einführungsangebot.",
+    uploadSectionTitle: "Etiketten-Artwork (PDF)",
+    uploadIntro:
+      "Eine PDF pro Position. Vorderseite erforderlich; weitere Flächen optional. Druckfertig CMYK mit Beschnitt bevorzugt.",
+    roleFront: "Vorderseite",
+    roleBack: "Rückseite",
+    roleNeck: "Hals",
+    roleOther: "Sonstiges",
+    uploadDrop: "PDF ablegen oder klicken",
+    uploadPdfOnly: "Nur PDF · max. 50 MB pro Datei",
+    uploadFrontRequired: "Bitte mindestens die Vorderseite (PDF) hinzufügen.",
+    uploadOptionalShort: "optional",
+    uploadRemove: "Entfernen",
     standardFormatsTitle: "Aus dem ersten Aufschlag — Standardformate",
     standardFormatsHint:
       "Preset wählen; Breite und Höhe werden ausgefüllt. Oder „eigene Maße“ und mm manuell eingeben.",

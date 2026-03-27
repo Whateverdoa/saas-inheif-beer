@@ -1,7 +1,6 @@
 """PDF validation service using PyMuPDF."""
 import logging
 from typing import BinaryIO, Optional
-from io import BytesIO
 import fitz  # PyMuPDF
 
 from app.models.pdf_validation import PDFValidationResult, PDFBox
@@ -144,53 +143,35 @@ class PDFValidator:
                 
                 # Check color space
                 try:
-                    # Get color space from images on the page
-                    image_list = first_page.get_images()
-                    color_spaces_found = set()
-                    
-                    for img_index, img in enumerate(image_list):
-                        try:
-                            xref = img[0]
-                            base_image = pdf_document.extract_image(xref)
-                            # Color space info might be in the image data
-                            # For now, we'll check the page's color space settings
-                        except Exception:
-                            pass
-                    
-                    # Check page color space more directly
-                    # PyMuPDF doesn't directly expose color space, so we check via images
-                    # This is a simplified check - might need enhancement
-                    page_text = first_page.get_text()
-                    
-                    # Try to determine color space from page resources
-                    # Default assumption: check if CMYK is mentioned in metadata
+                    # Pragmatic detection: inspect metadata markers only.
+                    # Keep this conservative to avoid false hard-fails.
                     pdf_metadata = pdf_document.metadata
                     if pdf_metadata:
-                        producer = pdf_metadata.get("producer", "").lower()
-                        creator = pdf_metadata.get("creator", "").lower()
-                        if "cmyk" in producer or "cmyk" in creator:
+                        producer = str(pdf_metadata.get("producer", "")).lower()
+                        creator = str(pdf_metadata.get("creator", "")).lower()
+                        profile = f"{producer} {creator}"
+                        if "cmyk" in profile:
                             is_cmyk = True
                             color_space = "CMYK"
-                    
-                    # More accurate check: look at color space in page resources
-                    # This requires parsing the PDF structure more deeply
-                    # For now, we'll do a basic check
+                        elif "rgb" in profile or "srgb" in profile:
+                            color_space = "RGB"
+
+                    # Unknown cannot be confidently classified by current parser.
                     if not is_cmyk:
-                        # Check if RGB or other color spaces are mentioned
-                        # If CMYK is required but not found, it's an error
                         if self.require_cmyk:
-                            # We can't definitively determine CMYK without deeper parsing
-                            # So we'll mark it as a warning if we can't confirm
-                            warnings.append("Could not verify CMYK color space - manual verification recommended")
-                        color_space = "Unknown"
-                    
+                            warnings.append(
+                                "Could not verify CMYK color space - manual verification recommended"
+                            )
+                        if not color_space:
+                            color_space = "Unknown"
+
                 except Exception as e:
                     logger.warning(f"Error checking color space: {e}")
                     if self.require_cmyk:
                         warnings.append(f"Could not verify color space: {str(e)}")
             
             # CMYK requirement check
-            if self.require_cmyk and not is_cmyk:
+            if self.require_cmyk and color_space == "RGB":
                 errors.append("PDF must use CMYK color space")
             
             # Validate boxes

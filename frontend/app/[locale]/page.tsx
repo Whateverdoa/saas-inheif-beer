@@ -13,7 +13,7 @@ export default async function HomePage({
   const messages = getMessages(locale)
 
   return (
-    <BrewTagShell locale={locale} languageNavLabel={messages.nav.language}>
+    <BrewTagShell locale={locale} languageNavLabel={messages.nav.language} variant="calm">
       <BrewTagHome home={messages.home} locale={locale} />
     </BrewTagShell>
   )
