@@ -416,13 +416,11 @@ TEMPLATE_STORAGE_KEY=
 4. **Multi-language:** Support for EU languages on labels?
 5. **Barcode Generation:** Include EAN-13 generation or require upload?
 
-### Pricing margin baseline proposal
+### Pricing policy (implemented baseline)
 
-- `sell_ex_vat = supplier_cost_ex_vat / (1 - target_margin)`
-- Add `minimum_margin_eur` per order and optional `minimum_order_eur`.
-- VAT handling:
-  - B2B default output: ex-VAT
-  - B2C storefront output: inc-VAT
+- **Spec:** [`docs/pricing-policy-spec.md`](docs/pricing-policy-spec.md) — margin definition, VAT modes, rounding, minimums, discount caps, env keys.
+- **Code:** [`app/services/pricing_policy.py`](app/services/pricing_policy.py) — `sell_subtotal_ex_vat_from_cost`, VAT totals, discount clamp, minimum order/margin helpers.
+- Product still confirms default **target margin** per tier/material; engineering defaults go in env as per spec.
 
 ### Supplier → Vila delivery (transport spec)
 
@@ -431,11 +429,14 @@ TEMPLATE_STORAGE_KEY=
 
 ### Shopify.dev collaboration notes
 
+- **Track:** [`docs/shopify-integration-track.md`](docs/shopify-integration-track.md) — embedded vs headless, webhooks, phased plan.
 - Treat Shopify as the commerce shell (auth, checkout, customer account).
 - INHEIF beer-label intake remains the decision engine (preflight, matching, pricing, draft).
-- Integration pattern:
-  - Shopify UI/embedded app -> INHEIF intake APIs
-  - payment-confirmed webhook -> press prep + supplier routing
+
+### Matching & catalog
+
+- **Matching QA:** [`docs/matching-quality-gates-spec.md`](docs/matching-quality-gates-spec.md) — corpus, accuracy gates, confidence τ, regression tests.
+- **Catalog governance:** [`docs/catalog-governance-spec.md`](docs/catalog-governance-spec.md) — source of truth, approvals, versioning, audit.
 
 ---
 
@@ -452,8 +453,8 @@ TEMPLATE_STORAGE_KEY=
 
 ### Short-term (Next 2 Sprints)
 - [ ] Full frontend integration (Phase 5)
-- [ ] Multi-label upload contract implementation
-- [ ] Price calculation integration with margin policy
+- [x] Multi-label upload contract implementation (UI + validation on order form; API upload next)
+- [ ] Price calculation integration with margin policy (wire `pricing_policy` to OGOS cost in API)
 - [ ] Checkout flow connection (Shopify.dev-compatible)
 - [ ] SLO instrumentation (`parse_ms`, `match_ms`, `price_ms`, `total_ms`)
 
@@ -473,6 +474,10 @@ TEMPLATE_STORAGE_KEY=
 - [Brewers of Europe Labelling Guide](https://brewersofeurope.org/) - Industry best practices
 - [OGOS API Documentation](internal) - Label printing integration
 - [Supplier → Vila delivery spec](docs/supplier-vila-delivery-spec.md) - Transport, idempotency, retries
+- [Pricing policy](docs/pricing-policy-spec.md) - Margin, VAT, floors; module `app/services/pricing_policy.py`
+- [Matching quality gates](docs/matching-quality-gates-spec.md) - Corpus, accuracy, confidence
+- [Catalog governance](docs/catalog-governance-spec.md) - SoT, approvals, versioning
+- [Shopify integration track](docs/shopify-integration-track.md) - Phases, webhooks, auth
 
 ---
 
