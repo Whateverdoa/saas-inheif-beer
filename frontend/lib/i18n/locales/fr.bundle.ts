@@ -4,65 +4,17 @@ export const frMessages: AppMessages = {
   meta: {
     title: "VILA-BIER VRIJMIBO | Étiquettes bière · Vila-etiketten",
     description:
-      "Commandez en une fois : formats standards de notre première série. Offre : 5 ct par étiquette.",
+      "Téléversez des PDF d’étiquettes bière (face/dos/col), choisissez un format standard, demandez un devis.",
   },
   nav: { language: "Langue" },
   home: {
-    badge: "Commande en une fois · formats standards",
+    badge: "Étiquettes bière · PDF prêts à imprimer",
     titleLine1: "VILA-BIER",
     titleLine2: "VRIJMIBO",
     intro:
-      "En direct : choisissez un format de notre première série, renseignez vos coordonnées et envoyez. " +
-      "Prêt à imprimer, options imperméables — offre de lancement 5 ct par étiquette.",
-    ctaOrder: "Commander en une fois →",
-    ctaExamples: "Voir exemples",
-    features: [
-      {
-        icon: "🎨",
-        title: "Prêt à imprimer",
-        text: "Envoyez l’artwork ou les formats standards. CMJN et fond perdu.",
-      },
-      {
-        icon: "🏷️",
-        title: "Matériaux premium",
-        text: "Vinyle, papier, kraft — chaîne du froid et seau à glace.",
-      },
-      {
-        icon: "📦",
-        title: "Tirages flexibles",
-        text: "Petite série à gros volume. Barèmes clairs.",
-      },
-    ],
-    showcaseTitle: "Pour chaque style",
-    showcaseSubtitle:
-      "Du Hazy IPA au stout impérial — votre étiquette raconte l’histoire avant la première gorgée.",
-    labels: [
-      { name: "Midnight", type: "Imperial Stout", abv: "11,5 % vol." },
-      { name: "Copperline", type: "Amber Ale", abv: "5,8 % vol." },
-      { name: "Forest Floor", type: "Farmhouse Saison", abv: "6,2 % vol." },
-      { name: "Ember", type: "Barrel-Aged Red", abv: "9,0 % vol." },
-    ],
-    howTitle: "Comment ça marche",
-    steps: [
-      { n: "1", title: "Configurer", desc: "Format, matière et quantité dans notre parcours." },
-      { n: "2", title: "Envoyer", desc: "PDF ou notes — nous validons les specs d’impression." },
-      { n: "3", title: "Épreuve", desc: "BAT numérique pour accord ou retouches." },
-      { n: "4", title: "Impression & envoi", desc: "Production et livraison brasserie ou entrepôt." },
-    ],
-    pricingTitle: "Tarifs simples",
-    pricingSubtitle: "Offre de lancement : 5 centimes par étiquette — commande en un flux avec formats standards.",
-    tiers: [
-      {
-        tier: "Offre",
-        price: "5 ct",
-        unit: "par étiquette — offre introductive",
-        feat: ["Formats NL standards", "Parcours en une fois", "Durée limitée"],
-        cta: "Commander",
-        featured: true,
-      },
-    ],
-    finalTitle: "Prêt à étiqueter ?",
-    finalSubtitle: "Moins de 2 minutes — format standard, un seul parcours.",
+      "Téléchargez vos PDF d’étiquettes (face avant obligatoire ; dos, col, optionnel), choisissez un format standard et demandez un devis — chemin court de l’artwork à la commande.",
+    ctaPrimary: "Téléverser les étiquettes & commander →",
+    ctaSecondary: "Texte conformité UE",
     footer:
       "VILA-BIER VRIJMIBO · Étiquettes bière · Rendu possible par OGOS ---Vila-etiketten",
   },
@@ -72,6 +24,18 @@ export const frMessages: AppMessages = {
     subtitle:
       "Tout-en-un : choisissez un format de notre première série, complétez vos coordonnées et demandez un devis.",
     promoLine: "Offre : 5 ct par étiquette — lancement.",
+    uploadSectionTitle: "Artwork étiquette (PDF)",
+    uploadIntro:
+      "Un PDF par position. Face avant obligatoire ; autres faces optionnelles. CMYK avec fond perdu préféré.",
+    roleFront: "Face",
+    roleBack: "Dos",
+    roleNeck: "Col",
+    roleOther: "Autre",
+    uploadDrop: "Déposer le PDF ou cliquer",
+    uploadPdfOnly: "PDF uniquement · max. 50 Mo par fichier",
+    uploadFrontRequired: "Ajoutez au minimum le PDF de la face avant pour continuer.",
+    uploadOptionalShort: "optionnel",
+    uploadRemove: "Retirer",
     standardFormatsTitle: "De notre première série — formats standards",
     standardFormatsHint:
       "Choisissez un préréglage ; largeur et hauteur se remplissent. Ou « dimensions perso » et saisie mm manuelle.",

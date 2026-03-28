@@ -3,8 +3,8 @@
 ## Project Overview
 
 **Project:** OGOS SaaS Platform - Beer Labels Module  
-**Status:** Planning Phase  
-**Last Updated:** 2026-03-19
+**Status:** Active implementation  
+**Last Updated:** 2026-03-27
 
 ---
 
@@ -33,6 +33,25 @@ The existing platform is a **label printing SaaS** that:
 ---
 
 ## 2. Beer Labels Feature Roadmap
+
+### Priority Direction (locked)
+
+These priorities are locked for current implementation:
+
+1. **Speed SLO:** after PDF upload, order draft in **<10s preferred**, **<60s hard cap (P95)**.
+2. **Multi-label MVP:** support label sets from day one (`front`, `back`, `neck`, optional `other`).
+3. **Pragmatic preflight:** no false hard-fails on unknown color space; block only when explicitly non-CMYK is detected.
+4. **Commercial pricing layer:** compute sell price from supplier cost with configurable target margin and floors.
+5. **Shopify.dev partnership track:** implement as Shopify-ready module with webhook-driven fulfillment.
+
+#### Latency budget (target)
+
+| Stage | Budget |
+|-------|--------|
+| Upload + parse | 1-3s |
+| Match + preflight rules | <1s |
+| Pricing + draft assembly | <1s |
+| Total response | 3-5s typical, <10s preferred |
 
 ### Phase 1: Foundation (MVP) ✅ COMPLETED
 **Goal:** Accept beer label PDFs in standard industry formats
@@ -166,17 +185,17 @@ The existing platform is a **label printing SaaS** that:
 
 ---
 
-### Phase 5: Full Frontend Integration 🔜 Want-to-Have
+### Phase 5: Full Frontend Integration 🔜 In Progress
 **Goal:** Complete order flow with existing components (PDF upload, price calculation, checkout)
 
-#### Current State (Simple UI)
+#### Current State
 The current `/beer` page is a simplified ordering interface with:
 - Label type selector
 - Substrate picker
 - Quantity input
 - Compliance text generator link
 
-#### Full Integration (Option A)
+#### Full Integration
 Integrate with existing frontend components from `frontend/components/orders/`:
 - `OrderForm.tsx` - Full order form with validation
 - `PDFUpload.tsx` - Drag-and-drop PDF upload with preview
@@ -190,8 +209,20 @@ Integrate with existing frontend components from `frontend/components/orders/`:
    - `orders.ts` - Order submission API
 2. Create types in `frontend/lib/types/orders.ts`
 3. Integrate beer label types into `OrderForm`
-4. Add beer-specific validation rules to PDF upload
+4. Add multi-label upload contract (`front`, `back`, `neck`, optional `other`)
 5. Connect to payment flow
+
+#### Multi-label contract (MVP)
+
+- `label_set_id` groups all uploaded files belonging to one SKU.
+- `role` must be one of: `front | back | neck | other`.
+- `front` is required for beer label set creation.
+- `back` and `neck` are optional.
+- Mixed dimensions are allowed within the same set, but each file must independently pass preflight.
+- Response includes per-file status and a set-level aggregate status:
+  - `completed` (all blocking checks pass)
+  - `partial` (draft returned, deferred checks pending)
+  - `requires_review` (one or more blocking checks failed)
 
 #### Files to Create/Modify
 ```
@@ -379,11 +410,33 @@ TEMPLATE_STORAGE_KEY=
 
 ## 8. Open Questions
 
-1. **Pricing Model:** Should beer labels have different pricing tiers?
+1. **Pricing Margin Policy:** What target gross margin per tier/material should we enforce?
 2. **Template Licensing:** Create in-house or license existing designs?
 3. **Compliance Liability:** Disclaimer for auto-generated compliance text?
 4. **Multi-language:** Support for EU languages on labels?
 5. **Barcode Generation:** Include EAN-13 generation or require upload?
+
+### Pricing policy (implemented baseline)
+
+- **Spec:** [`docs/pricing-policy-spec.md`](docs/pricing-policy-spec.md) — margin definition, VAT modes, rounding, minimums, discount caps, env keys.
+- **Code:** [`app/services/pricing_policy.py`](app/services/pricing_policy.py) — `sell_subtotal_ex_vat_from_cost`, VAT totals, discount clamp, minimum order/margin helpers.
+- Product still confirms default **target margin** per tier/material; engineering defaults go in env as per spec.
+
+### Supplier → Vila delivery (transport spec)
+
+- **Canonical doc:** [`docs/supplier-vila-delivery-spec.md`](docs/supplier-vila-delivery-spec.md) — job envelope (`supplier_job` v1), idempotency, retries, failure handling, SFTP/API/email options.
+- **Default path today:** OGOS Order API via `app/services/ogos_service.py`; the spec defines the same logical payload for alternate transports (HTTPS manifest, SFTP hotfolder) when Vila confirms their preferred channel.
+
+### Shopify.dev collaboration notes
+
+- **Track:** [`docs/shopify-integration-track.md`](docs/shopify-integration-track.md) — embedded vs headless, webhooks, phased plan.
+- Treat Shopify as the commerce shell (auth, checkout, customer account).
+- INHEIF beer-label intake remains the decision engine (preflight, matching, pricing, draft).
+
+### Matching & catalog
+
+- **Matching QA:** [`docs/matching-quality-gates-spec.md`](docs/matching-quality-gates-spec.md) — corpus, accuracy gates, confidence τ, regression tests.
+- **Catalog governance:** [`docs/catalog-governance-spec.md`](docs/catalog-governance-spec.md) — source of truth, approvals, versioning, audit.
 
 ---
 
@@ -399,10 +452,11 @@ TEMPLATE_STORAGE_KEY=
 - [x] Deploy to Vercel
 
 ### Short-term (Next 2 Sprints)
-- [ ] Full frontend integration (Phase 5 - Option A)
-- [ ] PDF upload with beer-specific validation
-- [ ] Price calculation integration
-- [ ] Checkout flow connection
+- [ ] Full frontend integration (Phase 5)
+- [x] Multi-label upload contract implementation (UI + validation on order form; API upload next)
+- [ ] Price calculation integration with margin policy (wire `pricing_policy` to OGOS cost in API)
+- [ ] Checkout flow connection (Shopify.dev-compatible)
+- [ ] SLO instrumentation (`parse_ms`, `match_ms`, `price_ms`, `total_ms`)
 
 ### Medium-term (Next Quarter)
 - [ ] Nutritional info calculator
@@ -419,6 +473,11 @@ TEMPLATE_STORAGE_KEY=
 - [EU Regulation 2019/787](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32019R0787) - Spirit drinks (for reference)
 - [Brewers of Europe Labelling Guide](https://brewersofeurope.org/) - Industry best practices
 - [OGOS API Documentation](internal) - Label printing integration
+- [Supplier → Vila delivery spec](docs/supplier-vila-delivery-spec.md) - Transport, idempotency, retries
+- [Pricing policy](docs/pricing-policy-spec.md) - Margin, VAT, floors; module `app/services/pricing_policy.py`
+- [Matching quality gates](docs/matching-quality-gates-spec.md) - Corpus, accuracy, confidence
+- [Catalog governance](docs/catalog-governance-spec.md) - SoT, approvals, versioning
+- [Shopify integration track](docs/shopify-integration-track.md) - Phases, webhooks, auth
 
 ---
 

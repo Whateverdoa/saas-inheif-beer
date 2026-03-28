@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useCallback, useState } from "react"
 
 import { KvkLookup } from "@/components/kvk/KvkLookup"
+import { LabelSetUpload, type LabelFileMap } from "@/components/order/LabelSetUpload"
 import { OrderQuantitySection } from "@/components/order/OrderQuantitySection"
 import { OrderStandardFormatsSection } from "@/components/order/OrderStandardFormatsSection"
 import { useBeerLabelTypes } from "@/components/order/use-beer-label-types"
@@ -39,6 +40,7 @@ export function BeerOrderForm({
   const [notes, setNotes] = useState("")
   const [addrFromKvk, setAddrFromKvk] = useState(false)
   const [standardPresetId, setStandardPresetId] = useState<string | null>(null)
+  const [labelFiles, setLabelFiles] = useState<LabelFileMap>({})
 
   const { formats, loading: formatsLoading, error: formatsErr } = useBeerLabelTypes()
   const formatsFetchFailed = formatsErr !== null
@@ -71,7 +73,19 @@ export function BeerOrderForm({
   }, [])
 
   const submit = () => {
+    if (!labelFiles.front) {
+      alert(t.uploadFrontRequired)
+      return
+    }
+    const labelPayload = (Object.entries(labelFiles) as [keyof LabelFileMap, File][]).map(
+      ([role, file]) => ({
+        role,
+        name: file.name,
+        size: file.size,
+      })
+    )
     console.info("Quote request", {
+      labelFiles: labelPayload,
       contactName,
       companyName,
       email,
@@ -107,6 +121,7 @@ export function BeerOrderForm({
       </header>
 
       <div className="rounded-3xl border border-white/30 bg-white/15 backdrop-blur-md p-8 md:p-11 mb-10">
+        <LabelSetUpload t={t} onChange={setLabelFiles} />
         <OrderStandardFormatsSection
           t={t}
           formats={formats}

@@ -4,69 +4,17 @@ export const nlMessages: AppMessages = {
   meta: {
     title: "VILA-BIER VRIJMIBO | Bieretiketten · Vila-etiketten",
     description:
-      "Bestel in één keer: standaard formaten uit onze eerste opzet. Introductie 5 ct per etiket — blik en fles.",
+      "Upload etiket-PDF’s (voor/achter/nek), kies een standaardformaat en vraag een offerte aan.",
   },
   nav: { language: "Taal" },
   home: {
-    badge: "In één keer bestellen · standaard formaten",
+    badge: "Bieretiketten · drukklare PDF’s",
     titleLine1: "VILA-BIER",
     titleLine2: "VRIJMIBO",
     intro:
-      "Bestel direct: kies een standaardformaat uit onze eerste opzet, vul je gegevens in en rond af. " +
-      "Drukklaar, waterdichte opties — introductieprijs 5 ct per etiket.",
-    ctaOrder: "Bestel in één keer →",
-    ctaExamples: "Bekijk voorbeelden",
-    features: [
-      {
-        icon: "🎨",
-        title: "Drukklaar design",
-        text: "Upload artwork of standaard afmetingen. Afloop en CMYK.",
-      },
-      {
-        icon: "🏷️",
-        title: "Premium materialen",
-        text: "Vinyl, papier, kraft — bestand tegen koude keten en ijsemmer.",
-      },
-      {
-        icon: "📦",
-        title: "Flexibele oplages",
-        text: "Van kleine runs tot productie. Heldere prijsniveaus.",
-      },
-    ],
-    showcaseTitle: "Voor elke stijl",
-    showcaseSubtitle:
-      "Van hazy IPA tot imperial stout — je etiket vertelt je verhaal vóór de eerste slok.",
-    labels: [
-      { name: "Midnight", type: "Imperial Stout", abv: "11,5% vol" },
-      { name: "Copperline", type: "Amber Ale", abv: "5,8% vol" },
-      { name: "Forest Floor", type: "Farmhouse Saison", abv: "6,2% vol" },
-      { name: "Ember", type: "Barrel-Aged Red", abv: "9,0% vol" },
-    ],
-    howTitle: "Zo werkt het",
-    steps: [
-      {
-        n: "1",
-        title: "Standaardformaat",
-        desc: "Kies een formaat uit de eerste opzet — afmetingen kloppen meteen.",
-      },
-      { n: "2", title: "Uploaden", desc: "Stuur je PDF of notities — wij checken drukspecificaties." },
-      { n: "3", title: "Proefdruk", desc: "Digitale proef voor akkoord of revisies." },
-      { n: "4", title: "Drukken & verzenden", desc: "Productie en levering naar brouwerij of magazijn." },
-    ],
-    pricingTitle: "Heldere prijzen",
-    pricingSubtitle: "Introductie: 5 cent per etiket — bestel in één keer met standaard formaten.",
-    tiers: [
-      {
-        tier: "Actie",
-        price: "5 ct",
-        unit: "per etiket — introductieaanbieding",
-        feat: ["Standaard NL-formaten", "Snel in één flow bestellen", "Zolang de actie loopt"],
-        cta: "Naar bestellen",
-        featured: true,
-      },
-    ],
-    finalTitle: "Klaar om te etiketteren?",
-    finalSubtitle: "Binnen 2 minuten rond — standaard formaat, één flow.",
+      "Upload je etiket-PDF’s (voorzijde verplicht; rug, nek, optioneel), kies een standaardformaat en vraag een offerte aan — kort van artwork naar order.",
+    ctaPrimary: "Etiketten uploaden & bestellen →",
+    ctaSecondary: "EU compliance-tekst",
     footer:
       "VILA-BIER VRIJMIBO · Bieretiketten · Mogelijk gemaakt door OGOS ---Vila-etiketten",
   },
@@ -76,6 +24,18 @@ export const nlMessages: AppMessages = {
     subtitle:
       "In één keer klaar: kies een standaardformaat uit onze eerste opzet, vul je gegevens in en vraag je offerte aan.",
     promoLine: "Actie: 5 ct per etiket — introductieaanbieding.",
+    uploadSectionTitle: "Label artwork (PDF)",
+    uploadIntro:
+      "Eén PDF per positie. Voorzijde verplicht; overige gezichten optioneel. Bij voorkeur drukklaar CMYK met afloop.",
+    roleFront: "Voorzijde",
+    roleBack: "Achterzijde",
+    roleNeck: "Nek",
+    roleOther: "Overig",
+    uploadDrop: "Sleep PDF of klik",
+    uploadPdfOnly: "Alleen PDF · max. 50 MB per bestand",
+    uploadFrontRequired: "Voeg minimaal het voor-etiket (PDF) toe om verder te gaan.",
+    uploadOptionalShort: "optioneel",
+    uploadRemove: "Verwijderen",
     standardFormatsTitle: "Uit onze eerste opzet — standaard Nederlandse formaten",
     standardFormatsHint:
       "Kies hier een preset uit de eerste opzet; breedte en hoogte worden ingevuld. Of kies “ander formaat” en typ zelf mm-maat.",

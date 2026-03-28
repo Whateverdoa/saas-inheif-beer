@@ -4,69 +4,17 @@ export const enMessages: AppMessages = {
   meta: {
     title: "VILA-BIER VRIJMIBO | Beer labels · Vila-etiketten",
     description:
-      "Order in one go: standard formats from our first release. Promo: €0.05 per label — cans & bottles.",
+      "Upload beer label PDFs (front, back, neck), pick a standard format, and request a quote.",
   },
   nav: { language: "Language" },
   home: {
-    badge: "Order in one go · standard formats",
+    badge: "Beer labels · print-ready PDFs",
     titleLine1: "VILA-BIER",
     titleLine2: "VRIJMIBO",
     intro:
-      "Order straight away: pick a standard size from our first format set, enter your details, and submit. " +
-      "Print-ready, waterproof options — launch offer 5 ct per label.",
-    ctaOrder: "Order in one go →",
-    ctaExamples: "See examples",
-    features: [
-      {
-        icon: "🎨",
-        title: "Design-ready",
-        text: "Upload artwork or use standard beer label sizes. Full bleed and CMYK.",
-      },
-      {
-        icon: "🏷️",
-        title: "Premium materials",
-        text: "Vinyl, paper, kraft — built for the cold chain and the ice bucket.",
-      },
-      {
-        icon: "📦",
-        title: "Flexible volumes",
-        text: "From small runs to scale. Transparent pricing tiers.",
-      },
-    ],
-    showcaseTitle: "Made for every style",
-    showcaseSubtitle:
-      "From hazy IPAs to imperial stouts — your label tells your story before the first sip.",
-    labels: [
-      { name: "Midnight", type: "Imperial Stout", abv: "11.5% ABV" },
-      { name: "Copperline", type: "Amber Ale", abv: "5.8% ABV" },
-      { name: "Forest Floor", type: "Farmhouse Saison", abv: "6.2% ABV" },
-      { name: "Ember", type: "Barrel-Aged Red", abv: "9.0% ABV" },
-    ],
-    howTitle: "How it works",
-    steps: [
-      {
-        n: "1",
-        title: "Standard size",
-        desc: "Choose a preset from the first format set — dimensions are filled in automatically.",
-      },
-      { n: "2", title: "Upload", desc: "Send your PDF or notes — we validate print specs." },
-      { n: "3", title: "Proof", desc: "Digital proof for approval or revisions." },
-      { n: "4", title: "Print & ship", desc: "Production and delivery to your brewery or warehouse." },
-    ],
-    pricingTitle: "Simple pricing",
-    pricingSubtitle: "Intro offer: 5 cents per label — one-flow ordering with standard formats.",
-    tiers: [
-      {
-        tier: "Promo",
-        price: "5 ct",
-        unit: "per label — introductory offer",
-        feat: ["Standard Dutch formats", "Single-flow checkout", "While promo lasts"],
-        cta: "Go to order",
-        featured: true,
-      },
-    ],
-    finalTitle: "Ready to label your brew?",
-    finalSubtitle: "Under 2 minutes — standard size, single flow.",
+      "Upload your label PDFs (front required; back, neck, optional), choose a standard size, and request a quote — a short path from artwork to order.",
+    ctaPrimary: "Upload labels & order →",
+    ctaSecondary: "EU compliance text",
     footer:
       "VILA-BIER VRIJMIBO · Beer labels · Powered by OGOS ---Vila-etiketten",
   },
@@ -76,6 +24,18 @@ export const enMessages: AppMessages = {
     subtitle:
       "One-and-done: pick a standard size from our first format set, enter your details, and request a quote.",
     promoLine: "Promo: 5 ct per label — introductory offer.",
+    uploadSectionTitle: "Label artwork (PDF)",
+    uploadIntro:
+      "Add one PDF per position. Front label is required; other faces are optional. Prefer print-ready CMYK with bleed.",
+    roleFront: "Front",
+    roleBack: "Back",
+    roleNeck: "Neck",
+    roleOther: "Other",
+    uploadDrop: "Drop PDF or click",
+    uploadPdfOnly: "PDF only · max 50 MB per file",
+    uploadFrontRequired: "Add at least the front label PDF to continue.",
+    uploadOptionalShort: "optional",
+    uploadRemove: "Remove",
     standardFormatsTitle: "From our first format set — standard label sizes",
     standardFormatsHint:
       "Pick a preset; width and height fill in automatically. Or choose “custom size” and type mm manually.",

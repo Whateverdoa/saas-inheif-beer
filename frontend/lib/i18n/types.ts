@@ -5,26 +5,10 @@ export type HomeMessages = {
   titleLine1: string
   titleLine2: string
   intro: string
-  ctaOrder: string
-  ctaExamples: string
-  features: { icon: string; title: string; text: string }[]
-  showcaseTitle: string
-  showcaseSubtitle: string
-  labels: { name: string; type: string; abv: string }[]
-  howTitle: string
-  steps: { n: string; title: string; desc: string }[]
-  pricingTitle: string
-  pricingSubtitle: string
-  tiers: {
-    tier: string
-    price: string
-    unit: string
-    feat: string[]
-    cta: string
-    featured?: boolean
-  }[]
-  finalTitle: string
-  finalSubtitle: string
+  /** Primary: order flow with label upload */
+  ctaPrimary: string
+  /** Secondary: compliance / legal text helper */
+  ctaSecondary: string
   /**
    * Full line after "© {year} ", e.g.
    * VILA-BIER VRIJMIBO · Bieretiketten · Mogelijk gemaakt door OGOS ---Vila-etiketten
@@ -38,6 +22,18 @@ export type OrderMessages = {
   subtitle: string
   /** Shown under subtitle (e.g. intro pricing promo). */
   promoLine: string
+  uploadSectionTitle: string
+  uploadIntro: string
+  roleFront: string
+  roleBack: string
+  roleNeck: string
+  roleOther: string
+  uploadDrop: string
+  uploadPdfOnly: string
+  uploadFrontRequired: string
+  /** Short suffix for non-front slots, e.g. "optional" / "optioneel". */
+  uploadOptionalShort: string
+  uploadRemove: string
   standardFormatsTitle: string
   standardFormatsHint: string
   loadingFormats: string
