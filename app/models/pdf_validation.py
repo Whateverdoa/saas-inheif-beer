@@ -1,5 +1,6 @@
 """PDF validation models."""
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -32,6 +33,36 @@ class PDFValidationResult(BaseModel):
     
     # Additional metadata
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional PDF metadata")
+
+    # Physical size & form hints (first page trim / media; mm)
+    trim_width_mm: Optional[float] = Field(
+        default=None, description="Trim width in millimetres (from PDF boxes)"
+    )
+    trim_height_mm: Optional[float] = Field(
+        default=None, description="Trim height in millimetres (from PDF boxes)"
+    )
+    media_width_mm: Optional[float] = Field(default=None, description="Media box width in mm")
+    media_height_mm: Optional[float] = Field(default=None, description="Media box height in mm")
+    bleed_insets_mm: Optional[Dict[str, float]] = Field(
+        default=None,
+        description="Bleed extension beyond trim: left, right, bottom, top (mm)",
+    )
+    dimensions_display: Optional[str] = Field(
+        default=None, description="Human-readable trim size, e.g. '80 × 100'"
+    )
+    suggested_shape: Optional[str] = Field(
+        default=None,
+        description="Order form shape id: rond, ovaal, rechthoek, custom",
+    )
+    matched_standard_label_type_id: Optional[str] = Field(
+        default=None, description="Closest catalog preset id within tolerance"
+    )
+    matched_standard_label_name: Optional[str] = Field(
+        default=None, description="Closest catalog preset display name"
+    )
+    match_distance_mm: Optional[float] = Field(
+        default=None, description="L1 distance to closest preset (mm), swap allowed"
+    )
 
     class Config:
         json_schema_extra = {
