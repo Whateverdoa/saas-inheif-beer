@@ -258,7 +258,14 @@ export function BeerLabelsConfigurator({
               <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-600 rounded-lg p-6 text-center">
                 <div className="text-zinc-400 dark:text-zinc-500 text-sm">{t.uploadHint}</div>
                 <p className="text-xs mt-1 text-zinc-400">{t.uploadSub}</p>
-                <input type="file" accept=".pdf" className="hidden" />
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  style={{ display: "none" }}
+                  tabIndex={-1}
+                  aria-hidden
+                />
               </div>
             </div>
             <button

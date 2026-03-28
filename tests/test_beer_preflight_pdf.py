@@ -59,3 +59,6 @@ def test_preflight_minimal_pdf_parses() -> None:
     data = r.json()
     assert data["page_count"] >= 1
     assert data["file_size"] == len(raw)
+    assert "dimensions_display" in data
+    assert data.get("trim_width_mm") is not None
+    assert data.get("suggested_shape") in ("rond", "rechthoek", "ovaal", "custom")

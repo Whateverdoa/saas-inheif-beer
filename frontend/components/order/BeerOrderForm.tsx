@@ -1,14 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { KvkLookup } from "@/components/kvk/KvkLookup"
+import { LabelPdfInsight } from "@/components/order/LabelPdfInsight"
 import { LabelSetUpload, type LabelFileMap } from "@/components/order/LabelSetUpload"
 import { OrderQuantitySection } from "@/components/order/OrderQuantitySection"
 import { OrderStandardFormatsSection } from "@/components/order/OrderStandardFormatsSection"
 import { useBeerLabelTypes } from "@/components/order/use-beer-label-types"
-import type { BeerLabelType } from "@/lib/api/beer"
+import { beerApi, type BeerLabelType, type PDFValidationResult } from "@/lib/api/beer"
 import type { Locale } from "@/lib/i18n/config"
 import { withLocale } from "@/lib/i18n/config"
 import type { KvkCompany } from "@/lib/api/kvk"
@@ -17,6 +18,8 @@ import type { KvkMessages, OrderMessages } from "@/lib/i18n/types"
 const inputCls =
   "w-full px-4 py-3 rounded-xl border-[1.5px] border-[#4a2800]/10 bg-white/45 focus:border-[#b8860b] focus:bg-white/65 outline-none text-[#4a2800]"
 const labelCls = "block text-[0.8rem] font-semibold text-[#6b3e06] mb-1 tracking-wide"
+
+const SHAPE_IDS = new Set(["rond", "rechthoek", "ovaal", "custom"])
 
 export function BeerOrderForm({
   messages: t,
@@ -41,11 +44,58 @@ export function BeerOrderForm({
   const [addrFromKvk, setAddrFromKvk] = useState(false)
   const [standardPresetId, setStandardPresetId] = useState<string | null>(null)
   const [labelFiles, setLabelFiles] = useState<LabelFileMap>({})
+  const [frontInsight, setFrontInsight] = useState<PDFValidationResult | null>(null)
+  const [insightLoading, setInsightLoading] = useState(false)
+  const [insightError, setInsightError] = useState<string | null>(null)
 
   const { formats, loading: formatsLoading, error: formatsErr } = useBeerLabelTypes()
   const formatsFetchFailed = formatsErr !== null
 
   const homeHref = withLocale(locale, "/")
+
+  const suggestedShapeLabel = useMemo(() => {
+    const id = frontInsight?.suggested_shape
+    if (!id) return null
+    return t.shapes.find((s) => s.id === id)?.name ?? null
+  }, [frontInsight?.suggested_shape, t.shapes])
+
+  useEffect(() => {
+    const file = labelFiles.front
+    if (!file) {
+      setFrontInsight(null)
+      setInsightError(null)
+      setInsightLoading(false)
+      return
+    }
+
+    const ac = new AbortController()
+    setInsightLoading(true)
+    setInsightError(null)
+
+    beerApi
+      .preflightLabelPdf(file, { signal: ac.signal })
+      .then((r) => {
+        setFrontInsight(r)
+        if (r.dimensions_display) {
+          setDimensions(r.dimensions_display)
+        }
+        if (r.suggested_shape && SHAPE_IDS.has(r.suggested_shape)) {
+          setLabelShape(r.suggested_shape)
+        }
+        if (r.matched_standard_label_type_id) {
+          setStandardPresetId(r.matched_standard_label_type_id)
+        }
+        setInsightLoading(false)
+      })
+      .catch((e: unknown) => {
+        if (e instanceof DOMException && e.name === "AbortError") return
+        setFrontInsight(null)
+        setInsightError(e instanceof Error ? e.message : String(e))
+        setInsightLoading(false)
+      })
+
+    return () => ac.abort()
+  }, [labelFiles.front])
 
   const applyKvk = useCallback((c: KvkCompany) => {
     setCompanyName(c.name)
@@ -84,22 +134,27 @@ export function BeerOrderForm({
         size: file.size,
       })
     )
-    console.info("Quote request", {
+    const quotePayload = {
+      draft: true,
+      note: t.alert,
       labelFiles: labelPayload,
       contactName,
       companyName,
       email,
       phone,
-      addrStreet,
-      addrCity,
-      labelShape,
-      dimensions,
-      material,
-      quantity,
-      notes,
-      standardLabelTypeId: standardPresetId,
-    })
-    alert(t.alert)
+      shipping: { street: addrStreet, city: addrCity },
+      label: {
+        shape: labelShape,
+        dimensionsMm: dimensions,
+        material,
+        quantity,
+        notes,
+        standardLabelTypeId: standardPresetId,
+      },
+      preflightFront: frontInsight,
+    }
+    console.info("Quote request", quotePayload)
+    alert(JSON.stringify(quotePayload, null, 2))
   }
 
   const mats = t.mats
@@ -121,7 +176,14 @@ export function BeerOrderForm({
       </header>
 
       <div className="rounded-3xl border border-white/30 bg-white/15 backdrop-blur-md p-8 md:p-11 mb-10">
-        <LabelSetUpload t={t} onChange={setLabelFiles} />
+        <LabelSetUpload t={t} files={labelFiles} onChange={setLabelFiles} />
+        <LabelPdfInsight
+          t={t}
+          loading={insightLoading}
+          errorMessage={insightError}
+          result={frontInsight}
+          shapeLabel={suggestedShapeLabel}
+        />
         <OrderStandardFormatsSection
           t={t}
           formats={formats}

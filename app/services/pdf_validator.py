@@ -3,7 +3,9 @@ import logging
 from typing import BinaryIO, Optional
 import fitz  # PyMuPDF
 
-from app.models.pdf_validation import PDFValidationResult, PDFBox
+from app.models.pdf_validation import PDFBox, PDFValidationResult
+from app.services.pdf_color_probe import augment_color_space_from_content
+from app.services.pdf_label_geometry import enrich_pdf_validation_result
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -141,10 +143,8 @@ class PDFValidator:
                 else:
                     warnings.append("Bleedbox not found in PDF")
                 
-                # Check color space
+                # Color space: metadata hints, then page streams + image dicts (PyMuPDF).
                 try:
-                    # Pragmatic detection: inspect metadata markers only.
-                    # Keep this conservative to avoid false hard-fails.
                     pdf_metadata = pdf_document.metadata
                     if pdf_metadata:
                         producer = str(pdf_metadata.get("producer", "")).lower()
@@ -156,14 +156,15 @@ class PDFValidator:
                         elif "rgb" in profile or "srgb" in profile:
                             color_space = "RGB"
 
-                    # Unknown cannot be confidently classified by current parser.
-                    if not is_cmyk:
-                        if self.require_cmyk:
-                            warnings.append(
-                                "Could not verify CMYK color space - manual verification recommended"
-                            )
-                        if not color_space:
-                            color_space = "Unknown"
+                    if not color_space:
+                        color_space = "Unknown"
+
+                    color_space, is_cmyk = augment_color_space_from_content(
+                        pdf_document,
+                        first_page,
+                        color_space,
+                        is_cmyk,
+                    )
 
                 except Exception as e:
                     logger.warning(f"Error checking color space: {e}")
@@ -200,8 +201,8 @@ class PDFValidator:
             }
             
             is_valid = len(errors) == 0
-            
-            return PDFValidationResult(
+
+            base = PDFValidationResult(
                 is_valid=is_valid,
                 errors=errors,
                 warnings=warnings,
@@ -214,6 +215,7 @@ class PDFValidator:
                 is_cmyk=is_cmyk,
                 metadata=metadata,
             )
+            return enrich_pdf_validation_result(base, trimbox, mediabox, bleedbox)
         
         finally:
             pdf_document.close()
