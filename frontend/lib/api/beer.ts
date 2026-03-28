@@ -46,6 +46,38 @@ export interface EULanguage {
   english_name: string
 }
 
+export type PDFBox = {
+  x0: number
+  y0: number
+  x1: number
+  y1: number
+}
+
+/** Mirrors FastAPI `PDFValidationResult` (preflight + geometry hints). */
+export interface PDFValidationResult {
+  is_valid: boolean
+  errors: string[]
+  warnings: string[]
+  file_size: number
+  page_count: number
+  trimbox: PDFBox | null
+  bleedbox: PDFBox | null
+  mediabox: PDFBox | null
+  color_space: string | null
+  is_cmyk: boolean
+  metadata: Record<string, unknown>
+  trim_width_mm?: number | null
+  trim_height_mm?: number | null
+  media_width_mm?: number | null
+  media_height_mm?: number | null
+  bleed_insets_mm?: Record<string, number> | null
+  dimensions_display?: string | null
+  suggested_shape?: string | null
+  matched_standard_label_type_id?: string | null
+  matched_standard_label_name?: string | null
+  match_distance_mm?: number | null
+}
+
 export interface ComplianceTextResponse {
   [langCode: string]: {
     ingredients_label: string
@@ -78,6 +110,25 @@ export const beerApi = {
 
   async getLanguages(): Promise<EULanguage[]> {
     return fetchJson<EULanguage[]>("/beer/languages")
+  },
+
+  async preflightLabelPdf(
+    file: File,
+    init?: { signal?: AbortSignal }
+  ): Promise<PDFValidationResult> {
+    const base = getPublicApiBase()
+    const fd = new FormData()
+    fd.append("file", file)
+    const res = await fetch(`${base}/beer/preflight-pdf`, {
+      method: "POST",
+      body: fd,
+      signal: init?.signal,
+    })
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(text || `HTTP ${res.status}`)
+    }
+    return res.json() as Promise<PDFValidationResult>
   },
 
   async generateComplianceText(body: {

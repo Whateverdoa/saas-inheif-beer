@@ -34,6 +34,29 @@ export type OrderMessages = {
   /** Short suffix for non-front slots, e.g. "optional" / "optioneel". */
   uploadOptionalShort: string
   uploadRemove: string
+  uploadReplace: string
+  uploadPreviewLoading: string
+  uploadPreviewFailed: string
+  /** Shown when a file is loaded: drag a new PDF onto the preview to replace. */
+  uploadDragReplaceHint: string
+  /** Panel: server read-out of the front PDF after preflight. */
+  insightTitle: string
+  insightLoading: string
+  insightFailed: string
+  insightPages: string
+  insightFileSize: string
+  insightTrimMm: string
+  insightMediaMm: string
+  insightBleedMm: string
+  insightColor: string
+  insightMetaTitle: string
+  insightSuggestedShape: string
+  insightMatch: string
+  insightMatchDistance: string
+  insightMatchNone: string
+  insightErrors: string
+  insightWarnings: string
+  insightAutoFillHint: string
   standardFormatsTitle: string
   standardFormatsHint: string
   loadingFormats: string
