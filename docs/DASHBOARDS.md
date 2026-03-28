@@ -33,6 +33,20 @@ If you use the older monorepo frontend project:
 **Public URL:** `https://inheif-saas-ogos-api-u22ws.ondigitalocean.app`  
 **Source:** GitHub `Whateverdoa/saas-inheif-beer` branch **`main`** (component `api`).
 
+## PDF preflight (API)
+
+Public endpoint (no auth): **`POST /beer/preflight-pdf`** with multipart field **`file`** (`.pdf`).
+
+- Swagger: `https://<api-host>/docs` → **beer** → `preflight_pdf`
+- Example:
+
+```bash
+curl -sS -X POST "https://inheif-saas-ogos-api-u22ws.ondigitalocean.app/beer/preflight-pdf" \
+  -F "file=@/path/to/label.pdf" | jq .
+```
+
+Returns `PDFValidationResult` JSON (`is_valid`, `errors`, `warnings`, `page_count`, boxes, `color_space`, etc.).
+
 ## Quick smoke checks (terminal)
 
 ```bash

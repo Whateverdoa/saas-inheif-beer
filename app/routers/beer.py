@@ -2,9 +2,10 @@
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel
 
+from app.models.pdf_validation import PDFValidationResult
 from app.models.beer_label import (
     BeerLabelType,
     BeerLabelCategory,
@@ -15,6 +16,7 @@ from app.models.beer_label import (
     BEER_SUBSTRATES,
     detect_allergens,
 )
+from app.services.pdf_validator import get_pdf_validator
 from app.models.beer_i18n import (
     EULanguage,
     LanguageInfo,
@@ -309,3 +311,20 @@ async def generate_compliance_text(request: ComplianceTextRequest) -> dict:
         producer=request.producer,
         country=request.country,
     )
+
+
+@router.post("/preflight-pdf", response_model=PDFValidationResult)
+async def preflight_pdf(file: UploadFile = File(..., description="Print-ready PDF to analyse")) -> PDFValidationResult:
+    """
+    Run PyMuPDF preflight (size, pages, boxes, pragmatic CMYK hints) without creating an order.
+
+    **No authentication** — intended for the label intake UI and quick checks; rate-limit at the edge in production.
+    """
+    name = (file.filename or "").lower()
+    if not name.endswith(".pdf"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must have a .pdf extension",
+        )
+    data = await file.read()
+    return get_pdf_validator().validate(data)
